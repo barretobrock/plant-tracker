@@ -1,0 +1,14 @@
+[Unit]
+Description=PlantTracker Webapp
+After=network.target
+
+[Service]
+User=bobrock
+Group=bobrock
+WorkingDirectory=/home/bobrock/extras/plant-tracker
+Environment="PATH=/home/bobrock/venvs/plants-311/bin"
+ExecStart=/home/bobrock/venvs/plants-311/bin/gunicorn --workers 2 --bind 127.0.0.1:5010 -m 007 wsgi:app --access-logfile '-' --error-logfile '-' --log-level 'debug'
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

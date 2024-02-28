@@ -1,3 +1,10 @@
+*.csv
+initdb.sql
+secretprops.properties
+# Database file & backups folder
+*.sqlite
+db_backups/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
