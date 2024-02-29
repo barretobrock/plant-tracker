@@ -6,8 +6,10 @@ from shapely.geometry import Polygon
 from sqlalchemy import (
     VARCHAR,
     Column,
+    ForeignKey,
     Integer,
 )
+from sqlalchemy.orm import relationship
 
 from .base import Base
 
@@ -15,15 +17,12 @@ from .base import Base
 @dataclass
 class TablePlantRegion(Base):
     """plant_region"""
-    plant_region_id: int = Column(Integer, primary_key=True, autoincrement=True)
+    region_id: int = Column(Integer, primary_key=True, autoincrement=True)
     region_name: str = Column(VARCHAR, nullable=False)
-    region_data: str = Column(VARCHAR, nullable=False)
+    region_poly = Column(VARCHAR, nullable=False)
+    sub_regions = relationship('TablePlantSubRegion', back_populates='region')
 
-    def __init__(self, region_name: str, region_data):
-        self.region_name = region_name
-        self.region_data = region_data
-
-        # TablePlantRegion(name='something', region_data='[[0, 2355], [55, 2355], ...]')
+    # TablePlantRegion(name='something', region_data='0,25555;1,25555;...')
 
     def __repr__(self):
         return self.build_repr_for_class(self)
@@ -32,13 +31,11 @@ class TablePlantRegion(Base):
 @dataclass
 class TablePlantSubRegion(Base):
     """plant_sub_region"""
-    plant_sub_region_id: int = Column(Integer, primary_key=True, autoincrement=True)
+    sub_region_id: int = Column(Integer, primary_key=True, autoincrement=True)
+    region_key: int = Column(ForeignKey(TablePlantRegion.region_id, ondelete='SET NULL'))
+    region = relationship('TablePlantRegion', back_populates='sub_regions')
     sub_region_name: str = Column(VARCHAR, nullable=False)
-    sub_region_data: str = Column(VARCHAR)
-
-    def __init__(self, sub_region_name: str, sub_region_data: str):
-        self.sub_region_name = sub_region_name
-        self.sub_region_data = sub_region_data
+    sub_region_poly: str = Column(VARCHAR)
 
     def __repr__(self):
         return self.build_repr_for_class(self)

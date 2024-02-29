@@ -78,9 +78,9 @@ class TableSpecies(Base):
     genus: str = Column(VARCHAR)
     species: str = Column(VARCHAR)
     scientific_name: str = Column(VARCHAR)
-    plant_family_key: int = Column(ForeignKey(TablePlantFamily.plant_family_id))
+    plant_family_key: int = Column(ForeignKey(TablePlantFamily.plant_family_id, ondelete='SET NULL'))
     plant_family = relationship(TablePlantFamily, foreign_keys=[plant_family_key])
-    habit_key: int = Column(ForeignKey(TablePlantHabit.plant_habit_id))
+    habit_key: int = Column(ForeignKey(TablePlantHabit.plant_habit_id, ondelete='SET NULL'))
     habit = relationship(TablePlantHabit, foreign_keys=[habit_key])
     is_native: bool = Column(Boolean)
     duration = Column(Enum(DurationType))
@@ -111,7 +111,7 @@ class TableAlternateNames(Base):
 
     alternate_name_id: int = Column(Integer, primary_key=True, autoincrement=True)
     name: str = Column(VARCHAR, nullable=False)
-    species_key: int = Column(ForeignKey(TableSpecies.species_id), nullable=False)
+    species_key: int = Column(ForeignKey(TableSpecies.species_id, ondelete='CASCADE'), nullable=False)
     species = relationship(TableSpecies, back_populates='alternate_names')
     is_scientific: bool = Column(Boolean, default=False, nullable=False)
 

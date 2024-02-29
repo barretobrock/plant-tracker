@@ -46,6 +46,10 @@ class ETL(DBAdmin):
         dim_plant_df = pd.read_csv(dim_plant_path, sep=',', skiprows=[0])
         self.dim_plant_df = dim_plant_df.loc[~dim_plant_df['Common Name'].isna(), :]
 
+        dim_fam_path = self.root_dir.joinpath('dim_families.csv')
+        dim_fam_df = pd.read_csv(dim_fam_path, sep=',')
+        self.dim_fam_df = dim_fam_df.loc[~dim_fam_df['sci'].isna(), :]
+
         fact_plant_log_path = self.root_dir.joinpath('fact_plant_log.csv')
         fact_plant_log_df = pd.read_csv(fact_plant_log_path, sep=',')
         self.fact_plant_log_df = fact_plant_log_df.loc[~fact_plant_log_df['name'].isna(), :]
@@ -65,7 +69,6 @@ class ETL(DBAdmin):
             return self.dim_plant_df[col_name].dropna().unique().tolist()
 
         attr_tables = {
-            TablePlantFamily: [TablePlantFamily(scientific_name=x) for x in get_uniques('Family')],
             TablePlantHabit: [TablePlantHabit(x) for x in get_uniques('Growth Habit')],
         }
 
@@ -150,6 +153,13 @@ class ETL(DBAdmin):
                 session.add(species)
                 session.commit()
             self.log.debug(f'Added to db.')
+
+    def load_families(self):
+        fams = []
+        for i, row in self.dim_fam_df.iterrows():
+            fams.append(TablePlantFamily(scientific_name=row['sci'], common_name=row['com']))
+        with self.session_mgr() as session:
+            session.bulk_save_objects(fams)
 
     def load_plants(self):
         self.log.info('Working on individual plants...')
