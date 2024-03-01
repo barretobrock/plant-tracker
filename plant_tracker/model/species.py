@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import List
 
 from sqlalchemy import (
     VARCHAR,
@@ -10,12 +9,7 @@ from sqlalchemy import (
     ForeignKey,
     Integer,
 )
-from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import (
-    column_property,
-    relationship
-)
-from sqlalchemy.sql import case
+from sqlalchemy.orm import relationship
 
 from .base import Base
 
@@ -30,6 +24,12 @@ class WaterRequirementType(StrEnum):
     LOW = 'low'
     MED = 'med'
     HIGH = 'high'
+
+
+class SoilMoistureType(StrEnum):
+    DRY = 'dry'
+    MOIST = 'moist'
+    WET = 'wet'
 
 
 class LightRequirementType(StrEnum):
@@ -86,6 +86,7 @@ class TableSpecies(Base):
     duration = Column(Enum(DurationType))
     water_requirement: str = Column(Enum(WaterRequirementType))
     light_requirement: str = Column(Enum(LightRequirementType))
+    soil_moisture: str = Column(Enum(SoilMoistureType))
     leaf_retention: str = Column(Enum(LeafRetentionType))
     is_drought_tolerant: bool = Column(Boolean)
     is_heat_tolerant: bool = Column(Boolean)

@@ -21,6 +21,7 @@ from .species import (
     DurationType,
     LeafRetentionType,
     LightRequirementType,
+    SoilMoistureType,
     TableAlternateNames,
     TablePlantFamily,
     TablePlantHabit,
