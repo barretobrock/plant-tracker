@@ -1,0 +1,20 @@
+{% import 'macros/form.html' as f %}
+{% extends 'base.html' %}
+{% block head %}
+    {{ super() }}
+{% endblock %}
+{% block content %}
+    {% set data_rows = [
+        ['common_name', 'genus', 'species'],
+        ['family', 'habit', 'duration'],
+        ['is_native', 'is_drought_tolerant', 'is_heat_tolerant', 'is_freeze_tolerant'],
+        ['water_requirement', 'light_requirement', 'soil_moisture', 'leaf_retention'],
+        ['usda_symbol', 'bloom_start_month', 'bloom_end_month', 'bloom_notes'],
+        ['care_notes'],
+        ['propagation_notes']
+    ] %}
+
+    {% call f.render_form(form, data_rows, post_endpoint_url) %}
+        {{ 'Edit' if is_edit else 'Add' }} a plant species
+    {% endcall %}
+{% endblock %}

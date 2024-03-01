@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block head %}
+    {{ super() }}
+{% endblock %}
+{% block content %}
+    <h2>Plant Family Info:</h2>
+    <div>
+        {{data.scientific_name}} ({{data.common_name}})
+    </div>
+{% endblock %}

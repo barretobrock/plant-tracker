@@ -1,0 +1,51 @@
+{% macro render_form(form, form_data_rows, post_endpoint_url) -%}
+    <h2>{{ caller() }}</h2>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/form.css') }}">
+    <form method="POST" action="{{ post_endpoint_url }}">
+        {{ form.csrf_token }}
+        {% if form.errors %}
+            <ul class="errors">
+              {% for field_name, error in form.errors.items() %}
+                <li>{{ field_name }}: {{ error }}</li>
+              {% endfor %}
+            </ul>
+        {% endif %}
+        {%- for row in form_data_rows %}
+            <div class="row mb-3">
+                {%- for item in row %}
+                    <div class="col">
+                        {% set fieldclass = "" %}
+                        {% if form[item].type != 'BooleanField' %}
+                            {% set fieldclass = fieldclass ~ " form-floating" %}
+                        {% endif %}
+                        <fieldset class="{{ fieldclass }}">
+                            {% set inputclass = "form-control bg-dark" %}
+                            {% if form[item].type == 'BooleanField' %}
+                                {% set inputclass = inputclass ~ " form-check-input" %}
+                            {% elif form[item].type == 'SelectField' %}
+                                {% set inputclass = inputclass ~ " form-select" %}
+                            {% endif %}
+
+                            <!--Here we instantiate the field item-->
+                            {% if form[item].type == 'DataListField' %}
+                                {{ form[item](list="id_datalist", class_=inputclass) }}
+                                <datalist id="id_datalist">
+                                    {% for entry in form[item].datalist_entries %}
+                                        <option value="{{ entry }}">
+                                    {% endfor %}
+                                </datalist>
+                            {% else %}
+                                {{ form[item](class_=inputclass) }}
+                            {% endif %}
+                            {{ form[item].label }}
+
+                        </fieldset>
+                    </div>
+                {%- endfor %}
+            </div>
+        {%- endfor %}
+        <div class="form-group submit">
+            {{ form.submit(class_="btn btn-primary") }}
+        </div>
+    </form>
+{%- endmacro %}

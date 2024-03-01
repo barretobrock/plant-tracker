@@ -1,0 +1,62 @@
+:root {
+    --logo-green: #34c100;
+    --txt-green: #76ff6a;
+    --txt-blue: cornflowerblue;
+    --txt-yellow: #ffc107;
+    --txt-red: #dc3545;
+    --txt-pink: #d63384;
+    --txt-light: #acacac;
+    --txt-teal: #20c997;
+    --bg-main: #2e2f35;
+    --bg-card: #42444d;
+    --bg-btn-1: #3e3e44;
+}
+
+ /*main page*/
+body {
+    background-color: var(--bg-main);
+}
+.card-body {
+    background-color: var(--bg-card);
+}
+
+h2,
+pre,
+body {
+    color: var(--txt-light);
+}
+
+a {
+    color: var(--txt-blue);
+    text-decoration: none;
+}
+
+.nav-logo {
+    width: 25px;
+}
+
+a.nav-link.active {
+    color: var(--logo-green) !important;
+}
+
+.species-buttons {
+    float: right
+}
+
+.species-title {
+    font-size: 2rem;
+}
+.species-badge {
+    vertical-align: top;
+    font-size: 0.75rem;
+}
+
+/* Icons */
+
+.icon.edit {
+    color: var(--txt-blue);
+}
+.icon.delete {
+    color: var(--txt-red);
+}
+

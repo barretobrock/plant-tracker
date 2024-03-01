@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% block head %}
+    {{ super() }}
+{% endblock %}
+{% block content %}
+    {% set waterreq_class = "waterreq" %}
+
+    <div class="row">
+        <div>
+            <div class="row title-block">
+                <div class="col">
+                    <div class="species-title">
+                        {{data.scientific_name}}
+                        <span class="species-badge badge rounded-pill bg-{{ 'success' if data.is_native else 'warning' }}">
+                            {% if data.is_native is none %}
+                                {{ "native?" }}
+                            {% elif data.is_native %}
+                                {{ "native" }}
+                            {% else %}
+                                {{ "not native" }}
+                            {% endif %}
+                            {{ 'not' if data.is_native == False else '' ~ ' native' ~ '?' if data.is_native is none else '' }}
+                        </span>
+
+                        <i class="{{ icon_class_map.water_requirement.map[icon_class_map.water_requirement.value] }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Test"></i>
+                    </div>
+                    <div class="species-subtitle">({{data.common_name}})</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <div class="row">
+        <div class="col my-2">
+            <div class="float-start">
+                <button type="button" class="btn btn-sm btn-outline-success position-relative">
+                    Plants
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success">
+                        {{data.plants|length}}
+                        <span class="visually-hidden">plants</span>
+                    </span>
+                </button>
+            </div>
+            <div class="float-end">
+                <button type="button" class="btn btn-outline-success btn-sm"><i class="bi-plus"></i>Add Photo</button>
+                <button type="button" class="btn btn-outline-primary btn-sm"><i class="bi-pencil"></i>Edit</button>
+                <button type="button" class="btn btn-outline-danger btn-sm"><i class="bi-trash"></i>Delete</button>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <div class="card-body shadow p-3 mb-5 rounded">
+                <h4 class="card-title">Basic Info</h4>
+                <p class="card-text">
+                    <span></span>
+                </p>
+                <div class="card-text">
+                {% for item_label, item_dict in basic_info.items() %}
+                    <div class="info-line">
+                        <strong>{{ item_label }}: </strong>
+                        {{ item_dict.value }}
+                    </div>
+                {% endfor %}
+                </div>
+
+            </div>
+             <div class="card-body shadow p-3 mb-5 rounded">
+                <h4 class="card-title">Bloom Info</h4>
+                <div class="card-text">
+                    <div class="info-line"><strong>Start Month: </strong>{{ data.bloom_start_month }}</div>
+                    <div class="info-line"><strong>End Month: </strong>{{ data.bloom_end_month }}</div>
+                    <div class="info-line"><strong>Notes: </strong>{{ data.bloom_notes }}</div>
+                    {% if data.bloom_start_month and data.bloom_end_month %}
+                        <div class="progress">
+                            <div class="progress-bar bg-light" role="progressbar" style="width: calc( ({{ data.bloom_start_month|int }} - 1)/12 * 100%);" aria-valuenow="{{ data.bloom_start_month|int/12 * 100|int }}" aria-valuemin="0" aria-valuemax="100"></div>
+                            <div class="progress-bar bg-success" role="progressbar" style="width: calc( ({{ data.bloom_end_month|int - data.bloom_start_month|int }})/12 * 100%);" aria-valuenow="8" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    {% endif %}
+
+                </div>
+
+            </div>
+        </div>
+        <div class="col">
+            <div id="plant-pic-carousel" class="carousel slide" data-bs-slide="carousel">
+                <div class="carousel-inner">
+                    {% for img in imgs %}
+                        <div class="carousel-item active">
+                            <img src="{{ img }}" class="d-block w-100" alt="plant-pic">
+                        </div>
+                    {% endfor %}
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                </button>
+            </div>
+        </div>
+
+    </div>
+    <div class="row">
+        <div class="col">
+            <div class="card-body shadow p-3 mb-5 rounded">
+                <h4 class="card-title">Additional Info</h4>
+                <p class="card-text">
+                    {% for item_label, item_dict in addl_info.items() %}
+                        <span><strong>{{ item_label }}: </strong></span>
+                        <span>{{ item_dict.value }}</span>
+                    {% endfor %}
+                </p>
+
+            </div>
+        </div>
+        <div class="col">
+            <div class="card-body shadow p-3 mb-5 rounded">
+                <h4 class="card-title">Alternate Names</h4>
+                <button type="button" class="btn btn-outline-success btn-sm"><i class="bi-plus"></i>Add Name</button>
+                <p class="card-text">
+                    {% for alt_name in alt_names %}
+                        <div>{{ alt_name }}</div>
+                    {% endfor %}
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <div class="card-body shadow p-3 mb-5 rounded">
+                <h4 class="card-title">Map</h4>
+                <svg></svg>
+            </div>
+        </div>
+    </div>
+{% endblock %}

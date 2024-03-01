@@ -1,0 +1,9 @@
+
+.form-control {
+    border: 1px dotted var(--txt-light);
+}
+
+.form-control,
+.form-control:focus {
+    color: var(--txt-green);
+}

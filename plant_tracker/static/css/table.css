@@ -1,0 +1,41 @@
+/* Copy / CSV buttons on datatables */
+.dataTables_wrapper {
+    position: relative;
+}
+
+.page-link {
+    color: var(--txt-blue);
+}
+
+li.page-item a,
+.page-item.disabled .page-link,
+.dt-search .form-control,
+.dt-length .form-select {
+    color: var(--txt-light);
+    border: 1px dotted var(--txt-light);
+    background-color: var(--bg-btn-1);
+}
+
+.page-item.active .page-link {
+	color: var(--txt-light);
+	background-color: var(--txt-blue);
+	/*border-color: #0d6efd;*/
+}
+
+/* icons in tables */
+
+td.icon-cell {
+    text-align: center !important;
+}
+td .icon {
+    font-size: 1rem;
+}
+td .icon.bool.bi-question {
+    color: var(--txt-yellow)
+}
+td .icon.bool.bi-check {
+    color: var(--txt-teal)
+}
+td .icon.bool.bi-x {
+    color: var(--txt-red)
+}

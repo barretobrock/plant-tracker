@@ -1,0 +1,19 @@
+{% import 'macros/form.html' as f %}
+{% extends 'base.html' %}
+{% block head %}
+    {{ super() }}
+{% endblock %}
+{% block content %}
+
+    {% set data_rows = [
+        ['species'],
+        ['plant_source', 'date_planted'],
+        ['is_drip_irrigated', 'is_in_container'],
+        ['planting_loc_x', 'planting_loc_y'],
+    ] %}
+
+
+    {% call f.render_form(form, data_rows, post_endpoint_url) %}
+        {{ 'Edit' if is_edit else 'Add' }} a plant
+    {% endcall %}
+{% endblock %}

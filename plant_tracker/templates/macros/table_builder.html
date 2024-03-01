@@ -1,0 +1,82 @@
+{% macro render_table(table_id, headers, data_rows, order_list) -%}
+
+    {% if not order_list %}
+        {% set order_list = [0, "asc"] %}
+    {% endif %}
+    {% set col, direction = order_list %}
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs5/dt-2.0.1/datatables.min.css"/>
+    <script type="text/javascript" src="https://cdn.datatables.net/v/bs5/dt-2.0.1/datatables.min.js"></script>
+    <script>
+        let tbl_id_name = '#{{ table_id }}';
+        $(document).ready(function () {
+            $(tbl_id_name).DataTable({
+                layout: {
+                    topStart: {
+                        pageLength: {
+                            menu: [25, 50, 100, 200]
+                        }
+                    },
+                    topEnd: {
+                        search: {
+                            placeholder: ''
+                        }
+                    },
+                    bottomEnd: {
+                        paging: {
+                            numbers: 5
+                        }
+                    }
+                },
+
+                info: true,
+                paging: true,
+                lengthChange: true,
+                lengthMenu: [25, 50, 100, 200],
+                searching: true,
+                order: [[{{ col }}, '{{ direction }}']],
+            });
+        });
+    </script>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/table.css') }}">
+    <div class="mt-5 mb-5">
+        <h3>{{ caller() }}</h3>
+        <div>
+            <table class="table table-sm table-bordered table-striped table-dark" id="{{ table_id }}">
+                <thead>
+                    <tr>
+                        {% for hdr in headers %}
+                            <th>{{ hdr }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in data_rows %}
+                        <tr>
+                            {% for item_name, value in d.items() %}
+                                <td class="{{ 'icon-cell' if value.icon else '' }}">
+
+                                    {% if value is mapping %}
+                                        {% set icon_class = value.icon_class if value.icon_class else ""  %}
+                                        {% set icon = value.icon if value.icon else ""  %}
+                                        {% set text = value.name if value.name is not none else ""  %}
+                                        {% if value.url %}
+                                            <a href="{{ value.url }}">
+                                                <i class="{{ icon_class }} {{ icon }}">
+                                                    {{ text }}
+                                                </i>
+                                            </a>
+                                        {% else %}
+                                            <i class="{{ icon_class }} {{ icon }}">{{ text }}</i>
+                                        {% endif %}
+                                    {% else %}
+                                        {{ value if value is not none else '' }}
+                                    {% endif %}
+                                </td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{%- endmacro %}

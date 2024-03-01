@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="form-wrapper">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/form.css') }}">
+        <h3 class="title">
+            {{ confirm_title }}
+            <span class="confirm-focus" style="font-weight: bold">{{ confirm_focus }}</span>
+            ?
+        </h3>
+        <form method="POST" action="{{ confirm_url }}" class="confirm-form">
+            <fieldset class="form-field">
+                {{ form.confirm.label }}
+                {{ form.confirm }}
+                {% if form.confirm.errors %}
+                    <ul class="errors">
+                      {% for error in form.confirm.errors %}
+                        <li>{{ error }}</li>
+                      {% endfor %}
+                    </ul>
+                {% endif %}
+            </fieldset>
+            {{ form.submit }}
+        </form>
+    </div>
+{% endblock %}
