@@ -10,7 +10,8 @@ from .logs import (
 )
 from .maps import (
     TablePlantRegion,
-    TablePlantSubRegion
+    TablePlantSubRegion,
+    TablePolypoint
 )
 from .plant import (
     PlantSourceType,
@@ -26,5 +27,6 @@ from .species import (
     TablePlantFamily,
     TablePlantHabit,
     TableSpecies,
+    TableSpeciesImage,
     WaterRequirementType
 )

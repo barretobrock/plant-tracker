@@ -15,7 +15,7 @@ from sqlalchemy.orm import relationship
 
 from .base import Base
 from .species import TableSpecies
-from .maps import TablePlantRegion, TablePlantSubRegion
+from .maps import TablePlantRegion, TablePlantSubRegion, TablePolypoint
 
 
 class PlantSourceType(StrEnum):
@@ -34,12 +34,11 @@ class TablePlant(Base):
     plant_id: int = Column(Integer, primary_key=True, autoincrement=True)
     species_key: int = Column(ForeignKey(TableSpecies.species_id, ondelete='CASCADE'), nullable=False)
     species = relationship('TableSpecies', back_populates='plants')
-    planting_loc_x: int = Column(Integer)
-    planting_loc_y: int = Column(Integer)
     region_key: int = Column(ForeignKey(TablePlantRegion.region_id, ondelete='SET NULL'))
     region = relationship(TablePlantRegion, foreign_keys=[region_key])
     sub_region_key: int = Column(ForeignKey(TablePlantSubRegion.sub_region_id, ondelete='SET NULL'))
     sub_region = relationship(TablePlantSubRegion, foreign_keys=[sub_region_key])
+    polypoint_key: int = Column(ForeignKey(TablePolypoint.polypoint_id, ondelete='SET NULL'))
     is_drip_irrigated: bool = Column(Boolean)
     is_in_container: bool = Column(Boolean)
     plant_source = Column(Enum(PlantSourceType))
@@ -60,7 +59,7 @@ class TablePlantImage(Base):
     plant_image_id: int = Column(Integer, primary_key=True, autoincrement=True)
     plant_key: int = Column(ForeignKey(TablePlant.plant_id, ondelete='CASCADE'), nullable=False)
     plant = relationship('TablePlant', back_populates='images')
-    plant_image_url: str = Column(VARCHAR, nullable=False, unique=True)
+    image_url: str = Column(VARCHAR, nullable=False, unique=True)
 
     def __repr__(self) -> str:
         return self.build_repr_for_class(self)
