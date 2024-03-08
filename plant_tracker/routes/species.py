@@ -25,7 +25,9 @@ from plant_tracker.forms.add_species import (
 from plant_tracker.forms.confirm_delete import ConfirmDeleteForm
 from plant_tracker.model import (
     DurationType,
+    LeafRetentionType,
     LightRequirementType,
+    SoilMoistureType,
     TablePlantFamily,
     TablePlantHabit,
     TableSpecies,
@@ -94,7 +96,7 @@ def get_species(species_id: int):
                                                                    f'({species.plant_family.common_name})')
         # Here, assign icon classes for data we want to attribute as an icon
         icon_class_map = {
-            'water_requirement': {
+            'Water Requirement': {
                 'addl_class': 'waterreq',
                 'value': default_if_prop_none(species, 'water_requirement', ''),
                 'map': {
@@ -103,6 +105,37 @@ def get_species(species_id: int):
                     WaterRequirementType.MED: 'bi-droplet-half',
                     WaterRequirementType.HIGH: 'bi-droplet-fill'
                 }
+            },
+            'Light Requirement': {
+                'addl_class': 'lightreq',
+                'value': default_if_prop_none(species, 'light_requirement', ''),
+                'map': {
+                    '': 'bi-question',
+                    LightRequirementType.FULLSUN: 'bi-sun-fill',
+                    LightRequirementType.PARTSUN: 'bi-brightness-alt-high-fill',
+                    LightRequirementType.PARTSHADE: 'bi-cloud-sun',
+                    LightRequirementType.FULLSHADE: 'bi-cloud',
+                }
+            },
+            'Leaf Retention': {
+                'addl_class': 'leafret',
+                'value': default_if_prop_none(species, 'leaf_retention', ''),
+                'map': {
+                    '': 'bi-question',
+                    LeafRetentionType.DECIDUOUS: 'bi-tree',
+                    LeafRetentionType.SEMIEVERGREEN: 'bi-star-half',
+                    LeafRetentionType.EVERGREEN: 'bi-tree-fill',
+                }
+            },
+            'Soil Moisture': {
+                'addl_class': 'soilmoist',
+                'value': default_if_prop_none(species, 'soil_moisture', ''),
+                'map': {
+                    '': 'bi-question',
+                    SoilMoistureType.DRY: 'bi-align-bottom',
+                    SoilMoistureType.MOIST: 'bi-align-center',
+                    SoilMoistureType.WET: 'bi-align-top',
+                }
             }
         }
 
@@ -110,9 +143,6 @@ def get_species(species_id: int):
             'Family': {'value': fam_text},
             'Habit': {'value': default_if_prop_none(species, 'habit.plant_habit', '?')},
             'Duration': {'value': default_if_prop_none(species, 'duration', '?')},
-            'Water Requirement': {'value': default_if_prop_none(species, 'water_requirement', '?')},
-            'Light Requirement': {'value': default_if_prop_none(species, 'light_requirement', '?')},
-            'Leaf Retention': {'value': default_if_prop_none(species, 'leaf_retention', '?')},
         }
         imgs = ['/images/winecup.jpg']
         addl_info = {

@@ -2,6 +2,7 @@
     --logo-green: #34c100;
     --txt-green: #76ff6a;
     --txt-blue: cornflowerblue;
+    --txt-brown: #8c6406;
     --txt-yellow: #ffc107;
     --txt-red: #dc3545;
     --txt-pink: #d63384;
@@ -51,6 +52,10 @@ a.nav-link.active {
     font-size: 0.75rem;
 }
 
+.bloom-badge {
+    width: 27px;
+}
+
 /* Icons */
 
 .icon.edit {
@@ -58,5 +63,18 @@ a.nav-link.active {
 }
 .icon.delete {
     color: var(--txt-red);
+}
+
+.icon.waterreq {
+    color: var(--txt-blue)
+}
+.icon.lightreq {
+    color: var(--txt-yellow)
+}
+.icon.leafret {
+    color: var(--txt-green)
+}
+.icon.soilmoist {
+    color: var(--txt-brown)
 }
 

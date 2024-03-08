@@ -1,5 +1,6 @@
+.idea
 *.csv
-initdb.sql
+init.sh
 secretprops.properties
 # Database file & backups folder
 *.sqlite

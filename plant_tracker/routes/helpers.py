@@ -4,6 +4,7 @@ from typing import List
 from flask import (
     current_app,
     g,
+    redirect,
     request,
     make_response
 )
@@ -48,6 +49,12 @@ def log_after(response):
     time_ms = int(total_time * 1000)
     get_app_logger().info(f'Timing: {time_ms}ms [{request.method}] -> {request.path}')
     return response
+
+
+def clear_trailing_slash():
+    req_path = request.path
+    if req_path != '/' and req_path.endswith('/'):
+        return redirect(req_path[:-1])
 
 
 def get_obj_attr_or_default(obj, attrs: List[str], default: str, layout: str = None):

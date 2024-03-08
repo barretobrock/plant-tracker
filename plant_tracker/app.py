@@ -17,6 +17,7 @@ from plant_tracker.core.db import DBAdmin
 from plant_tracker.flask_base import db
 from plant_tracker.routes.family import bp_family
 from plant_tracker.routes.helpers import (
+    clear_trailing_slash,
     get_app_logger,
     log_after,
     log_before,
@@ -57,6 +58,8 @@ def create_app(*args, **kwargs) -> Flask:
     app = Flask(__name__, static_url_path='/')
     CORS(app)
     app.config.from_object(config_class)
+    # Reduce the amount of 404s by disabling strict slashes (e.g., when a forward slash is appended to a url)
+    app.url_map.strict_slashes = False
 
     # Initialize database ops
     db.init_app(app)
@@ -87,6 +90,7 @@ def create_app(*args, **kwargs) -> Flask:
     app.extensions.setdefault('eng', eng)
 
     app.before_request(log_before)
+    app.before_request(clear_trailing_slash)
     # app.before_request(handle_preflight)
     app.after_request(log_after)
     # app.after_request(set_headers)

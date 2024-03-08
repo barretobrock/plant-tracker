@@ -163,7 +163,7 @@ def populate_species_form(session, form: AddSpeciesForm, species_id: int = None)
             if isinstance(attr_details, str):
                 form_field_map[attr] = species.__getattribute__(attr)
             elif isinstance(attr_details, dict):
-                default_var = attr_details.get('empty_var', '')
+                default_var = default_if_prop_none(species, attr_details['tbl_key'], attr_details.get('empty_var', ''))
 
                 choices = None
                 if 'choices' in attr_details.keys():
@@ -172,6 +172,10 @@ def populate_species_form(session, form: AddSpeciesForm, species_id: int = None)
                     choices = fams
                 elif attr == 'habit':
                     choices = habits
+
+                if default_var not in choices:
+                    # Probably bool val, so coerce back to string
+                    default_var = 'yes' if default_var is True else 'no'
 
                 form_field_map[attr] = {
                     'default': default_if_prop_none(species, attr_details['tbl_key'], default=default_var),

@@ -21,8 +21,9 @@
                             {% endif %}
                             {{ 'not' if data.is_native == False else '' ~ ' native' ~ '?' if data.is_native is none else '' }}
                         </span>
-
-                        <i class="{{ icon_class_map.water_requirement.map[icon_class_map.water_requirement.value] }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Test"></i>
+                        {% for item_name, item_dict in icon_class_map.items() %}
+                            <i class="icon {{ item_dict.map[item_dict.value] }} {{ item_dict.addl_class}}" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ item_name }} - {{ item_dict.value }}"></i>
+                        {% endfor %}
                     </div>
                     <div class="species-subtitle">({{data.common_name}})</div>
                 </div>
@@ -42,7 +43,7 @@
                 </button>
             </div>
             <div class="float-end">
-                <button type="button" class="btn btn-outline-success btn-sm"><i class="bi-plus"></i>Add Photo</button>
+                <button type="button" class="btn btn-outline-warning btn-sm"><i class="bi-wrench">Maintenance</i></button>
                 <button type="button" class="btn btn-outline-primary btn-sm"><i class="bi-pencil"></i>Edit</button>
                 <button type="button" class="btn btn-outline-danger btn-sm"><i class="bi-trash"></i>Delete</button>
             </div>
@@ -63,45 +64,103 @@
                     </div>
                 {% endfor %}
                 </div>
+                <hr>
+                <h5 class="card-title">
+                    Alternate Names
+                    <div class="float-end">
+                        <button type="button" class="btn btn-outline-success btn-sm"><i class="bi-plus"></i>Add Name</button>
+                    </div>
+                </h5>
 
-            </div>
-             <div class="card-body shadow p-3 mb-5 rounded">
-                <h4 class="card-title">Bloom Info</h4>
+                <p class="card-text">
+                    {% for alt_name in alt_names %}
+                        <div>{{ alt_name }}</div>
+                    {% endfor %}
+                </p>
+                <hr>
+                <h5 class="card-title">Bloom Info</h5>
                 <div class="card-text">
-                    <div class="info-line"><strong>Start Month: </strong>{{ data.bloom_start_month }}</div>
-                    <div class="info-line"><strong>End Month: </strong>{{ data.bloom_end_month }}</div>
+                    <div class="info-line">
+                        <strong>Start Month: </strong>{{ data.bloom_start_month }}
+                        <strong>End Month: </strong>{{ data.bloom_end_month }}
+                    </div>
                     <div class="info-line"><strong>Notes: </strong>{{ data.bloom_notes }}</div>
-                    {% if data.bloom_start_month and data.bloom_end_month %}
-                        <div class="progress">
-                            <div class="progress-bar bg-light" role="progressbar" style="width: calc( ({{ data.bloom_start_month|int }} - 1)/12 * 100%);" aria-valuenow="{{ data.bloom_start_month|int/12 * 100|int }}" aria-valuemin="0" aria-valuemax="100"></div>
-                            <div class="progress-bar bg-success" role="progressbar" style="width: calc( ({{ data.bloom_end_month|int - data.bloom_start_month|int }})/12 * 100%);" aria-valuenow="8" aria-valuemin="0" aria-valuemax="100"></div>
-                        </div>
-                    {% endif %}
+                    {% set bloom_start = data.bloom_start_month if data.bloom_start_month else 0 %}
+                    {% set bloom_end = data.bloom_end_month if data.bloom_end_month else 0 %}
+                    <div class="bloom-months-section">
+                        {% for m in 'j,f,m,a,m,j,j,a,s,o,n,d'.split(',') %}
+                            {% if bloom_start <= loop.index <= bloom_end %}
+                                {% set bloomclass = "bg-success" %}
+                            {% else %}
+                                {% set bloomclass = "bg-light" %}
+                            {% endif %}
+                            <span class="badge {{ bloomclass }} bloom-badge">{{ m.upper() }}</span>
+                        {% endfor %}
+                    </div>
 
                 </div>
 
             </div>
         </div>
         <div class="col">
-            <div id="plant-pic-carousel" class="carousel slide" data-bs-slide="carousel">
-                <div class="carousel-inner">
-                    {% for img in imgs %}
-                        <div class="carousel-item active">
-                            <img src="{{ img }}" class="d-block w-100" alt="plant-pic">
-                        </div>
-                    {% endfor %}
+            <div class="card-body shadow p-3 mb-5 rounded">
+                <h4 class="card-title">
+                    Photos
+                    <div class="float-end">
+                        <button type="button" class="btn btn-outline-success btn-sm"><i class="bi-plus"></i>Add Photo</button>
+                    </div>
+                </h4>
+
+                <div id="plant-pic-carousel" class="carousel slide" data-bs-slide="carousel">
+                    <div class="carousel-inner">
+                        {% for img in imgs %}
+                            <div class="carousel-item active">
+                                <img src="{{ img }}" class="d-block w-100" alt="plant-pic">
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Previous</span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Next</span>
+                    </button>
                 </div>
-                <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="prev">
-                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                    <span class="visually-hidden">Previous</span>
-                </button>
-                <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="next">
-                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                    <span class="visually-hidden">Next</span>
-                </button>
             </div>
         </div>
 
+    </div>
+    <div class="row">
+        <div class="col">
+            <div class="card-body shadow p-3 mb-5 rounded">
+                <h4 class="card-title">
+                    Upcoming Tasks
+                    <div class="float-end">
+                        <button type="button" class="btn btn-outline-success btn-sm"><i class="bi-plus"></i>Add Task</button>
+                    </div>
+                </h4>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card-body shadow p-3 mb-5 rounded">
+                <h4 class="card-title">Recent Tasks</h4>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <div class="card-body shadow p-3 mb-5 rounded">
+                <h4 class="card-title">Observations</h4>
+                <p class="card-text">
+                    {% for obs in observations %}
+                        <span>{{ obs.name }}</span>
+                    {% endfor %}
+                </p>
+
+            </div>
+        </div>
     </div>
     <div class="row">
         <div class="col">
@@ -114,17 +173,6 @@
                     {% endfor %}
                 </p>
 
-            </div>
-        </div>
-        <div class="col">
-            <div class="card-body shadow p-3 mb-5 rounded">
-                <h4 class="card-title">Alternate Names</h4>
-                <button type="button" class="btn btn-outline-success btn-sm"><i class="bi-plus"></i>Add Name</button>
-                <p class="card-text">
-                    {% for alt_name in alt_names %}
-                        <div>{{ alt_name }}</div>
-                    {% endfor %}
-                </p>
             </div>
         </div>
     </div>
