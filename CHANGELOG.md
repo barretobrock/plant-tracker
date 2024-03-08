@@ -14,6 +14,10 @@ _Note: 'Unreleased' section below is used for untagged changes that will be issu
 #### Fixed
 #### Security
 __BEGIN-CHANGELOG__
+ 
+### [0.0.2] - 2024-03-07
+#### Fixed
+ - Resolved issue where a trailing forward slash returns 404 error
 
 
 ### [0.0.1] - 2024-01-21
