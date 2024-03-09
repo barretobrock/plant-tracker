@@ -56,8 +56,24 @@ a.nav-link.active {
     width: 27px;
 }
 
-/* Icons */
+.inline-button {
+    padding: 2px;
+    border-style: dotted;
+}
 
+.confirm-focus {
+    font-weight: bold;
+    color: var(--txt-red);
+}
+
+input:disabled {
+    color: var(--txt-light);
+}
+
+/* Icons */
+.icon.add {
+    color: var(--txt-green);
+}
 .icon.edit {
     color: var(--txt-blue);
 }

@@ -92,16 +92,18 @@ def get_all_families():
                 'id': {'url': url_for('family.get_family', family_id=fm_id), 'name': fm_id},
                 'scientific_name': fm.scientific_name,
                 'common_name': fm.common_name,
-                'edit': {'url': url_for('family.edit_family', family_id=fm_id),
-                         'icon': 'bi-pencil', 'icon_class': 'icon edit'},
-                'delete': {'url': url_for('family.delete_family', family_id=fm_id),
-                           'icon': 'bi-trash', 'icon_class': 'icon delete'}
+                '': [
+                    {'url': url_for('family.edit_family', family_id=fm_id),
+                     'icon': 'bi-pencil', 'icon_class': 'icon edit me-1'},
+                    {'url': url_for('family.delete_family', family_id=fm_id),
+                     'icon': 'bi-trash', 'icon_class': 'icon delete'}
+                ]
             })
     return render_template(
         'pages/family/list-families.html',
         order_list=[1, 'asc'],
         data_rows=data_list,
-        headers=['ID', 'Scientific Name', 'Common Name', 'Edit', 'Delete'],
+        headers=['ID', 'Scientific Name', 'Common Name', ''],
         table_id='families-table'
     ), 200
 

@@ -1,7 +1,11 @@
-{% macro render_form(form, form_data_rows, post_endpoint_url) -%}
+{% macro render_form(form, form_data_rows, post_endpoint_url, is_file_upload) -%}
+    {% if is_file_upload is none %}
+        {% set is_file_upload = False %}
+    {% endif %}
+    {% set enctype = "multipart/form-data" if is_file_upload else "application/x-www-form-urlencoded" %}
     <h2>{{ caller() }}</h2>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/form.css') }}">
-    <form method="POST" action="{{ post_endpoint_url }}">
+    <form method="POST" action="{{ post_endpoint_url }}" enctype="{{ enctype }}">
         {{ form.csrf_token }}
         {% if form.errors %}
             <ul class="errors">

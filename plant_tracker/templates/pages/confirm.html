@@ -5,7 +5,7 @@
         <link rel="stylesheet" href="{{ url_for('static', filename='css/form.css') }}">
         <h3 class="title">
             {{ confirm_title }}
-            <span class="confirm-focus" style="font-weight: bold">{{ confirm_focus }}</span>
+            <span class="confirm-focus">{{ confirm_focus }}</span>
             ?
         </h3>
         <form method="POST" action="{{ confirm_url }}" class="confirm-form">

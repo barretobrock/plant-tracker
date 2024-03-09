@@ -1,0 +1,16 @@
+{% import 'macros/form.html' as f %}
+{% extends 'base.html' %}
+{% block head %}
+    {{ super() }}
+{% endblock %}
+{% block content %}
+    {% set data_rows = [
+        ['common_name'],
+        ['scientific_name']
+    ] %}
+
+
+    {% call f.render_form(form, data_rows, post_endpoint_url, is_file_upload=True) %}
+        {{ 'Edit' if is_edit else 'Add' }} an alternate name
+    {% endcall %}
+{% endblock %}

@@ -6,13 +6,17 @@ from wtforms import (
 from wtforms.validators import DataRequired
 
 from plant_tracker.model import TablePlantFamily
-from plant_tracker.forms.helper import populate_form
+from plant_tracker.forms.helper import (
+    apply_field_data_to_form,
+    extract_form_data_to_obj,
+    populate_form
+)
 
-# List of variables to extract between form & table object
-family_objs = [
-    'scientific_name',
-    'common_name'
-]
+
+family_attr_map = {
+    'scientific_name': 'scientific_name',
+    'common_name': 'common_name'
+}
 
 
 class AddFamilyForm(FlaskForm):
@@ -32,7 +36,9 @@ def populate_family_form(session, form: AddFamilyForm, family_id: int = None) ->
         family = session.query(TablePlantFamily).filter(TablePlantFamily.plant_family_id == family_id).one_or_none()
         if family is None:
             return form
-        form_field_map = {k: family.__getattribute__(k) for k in family_objs}
+
+        form_field_map = apply_field_data_to_form(family, family_attr_map)
+
         # Any cleanup of data should happen here...
 
         form = populate_form(form, form_field_map)
@@ -52,7 +58,7 @@ def get_family_data_from_form(session, form_data, family_id: int = None) -> Tabl
         # New family object
         family = TablePlantFamily()
 
-    for attr in family_objs:
-        family.__setattr__(attr, form_data[attr])
+    family = extract_form_data_to_obj(form_data=form_data, table_obj=family,
+                                      obj_attr_map=family_attr_map, session=session)
 
     return family

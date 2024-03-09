@@ -6,8 +6,8 @@ from shapely.geometry.polygon import Polygon
 from wtforms import (
     DateField,
     IntegerField,
-    MonthField,
     SelectField,
+    StringField,
     SubmitField,
 )
 from wtforms.validators import DataRequired
@@ -15,13 +15,14 @@ from wtforms.validators import DataRequired
 from plant_tracker.model import (
     PlantSourceType,
     TablePlant,
-    TablePlantSubRegion,
+    TablePolypoint,
     TableSpecies
 )
-from plant_tracker.core.utils import default_if_prop_none
 from plant_tracker.forms.helper import (
     DataListField,
+    apply_field_data_to_form,
     bool_with_unknown_list,
+    extract_form_data_to_obj,
     list_with_default,
     populate_form
 )
@@ -30,6 +31,7 @@ from plant_tracker.forms.helper import (
 plant_attr_map = {
     'species': {
         'tbl_key': 'species.common_name',
+        'sub_obj': TableSpecies
     },
     'plant_source': {
         'tbl_key': 'plant_source',
@@ -45,9 +47,7 @@ plant_attr_map = {
         'tbl_key': 'is_in_container',
         'empty_var': 'unknown',
         'choices': bool_with_unknown_list
-    },
-    'planting_loc_x': 'planting_loc_x',
-    'planting_loc_y': 'planting_loc_y'
+    }
 }
 
 
@@ -80,6 +80,8 @@ class AddPlantForm(FlaskForm):
     planting_loc_y = IntegerField(
         label='Planting Location Y'
     )
+    planting_loc_polygon = StringField(label='Planting Location as polygon',
+                                       description='x,y pairs, semicolon delimited (e.g., 3,4;3,5;0,5;3,4)')
 
     submit = SubmitField('Submit')
 
@@ -96,24 +98,10 @@ def populate_plant_form(session, form: AddPlantForm, plant_id: int = None) -> Ad
         if plant is None:
             return form
 
-        form_field_map = {}
-        for attr, attr_details in plant_attr_map.items():
-            if isinstance(attr_details, str):
-                form_field_map[attr] = plant.__getattribute__(attr)
-            elif isinstance(attr_details, dict):
+        plant_attr_map['species']['choices'] = species_list
 
-                default_var = attr_details.get('empty_var', '')
+        form_field_map = apply_field_data_to_form(plant, plant_attr_map)
 
-                choices = None
-                if 'choices' in attr_details.keys():
-                    choices = attr_details['choices']
-                elif attr == 'species':
-                    choices = species_list
-
-                form_field_map[attr] = {
-                    'default': default_if_prop_none(plant, attr_details['tbl_key'], default=default_var),
-                    'choices': list_with_default(choices, default=default_var)
-                }
         # Any cleanup of data should happen here
 
         form = populate_form(form, form_field_map)
@@ -132,44 +120,20 @@ def get_plant_data_from_form(session, form_data, plant_id: int = None) -> TableP
         # New plant object
         plant = TablePlant()
 
-    for attr, attr_details in plant_attr_map.items():
-        attr_data = form_data[attr]
-        if attr_data in bool_with_unknown_list:
-            if attr_data == 'unknown':
-                attr_data = None
-            else:
-                attr_data = attr_data == 'yes'
-        elif attr_data == '':
-            continue
+    plant = extract_form_data_to_obj(form_data=form_data, table_obj=plant,
+                                     obj_attr_map=plant_attr_map, session=session)
 
-        if isinstance(attr_details, dict):
-            attr_table_obj_name = attr_details['tbl_key']
-        else:
-            attr_table_obj_name = attr_details
-        if '.' in attr_table_obj_name:
-            # nested value
-            sub_obj_name, sub_obj_attr_name = attr_table_obj_name.split('.', maxsplit=1)
-            sub_obj = plant.__getattribute__(sub_obj_name)
-            if sub_obj is None or sub_obj.__getattribute__(sub_obj_attr_name) != attr_data:
-                # Swap nested objects by querying for the new one
-                # TODO: In order to unify this method with others, I need to confirm that
-                #   I can grab the class for querying
-                sub_obj = session.query(TableSpecies).filter(TableSpecies.scientific_name == attr_data).one_or_none()
-                plant.__setattr__(sub_obj_name, sub_obj)
-        else:
-            plant.__setattr__(attr_table_obj_name, attr_data)
-
+    polypoint_obj = None
     # Handle x,y coordinate region determination
-    if plant.planting_loc_x and plant.planting_loc_y:
-        selected_region = None
-        point = Point(plant.planting_loc_x, plant.planting_loc_y)
-        sub_regions = session.query(TablePlantSubRegion).all()
-        for sub_region in sub_regions:
-            polygon_txt = sub_region.sub_region_poly
-            polygon = Polygon([tuple(*x.split(',')) for x in polygon_txt.split(';')])
-            if polygon.contains(point):
-                selected_region = sub_region
-                break
-        plant.sub_region = selected_region
+    if (point_x := form_data.get('planting_loc_x')) and (point_y := form_data.get('planting_loc_y')):
+        polypoint_obj = TablePolypoint(point=f'{point_x},{point_y}')
+    elif polygon := form_data.get('polygon_loc'):
+        polypoint_obj = TablePolypoint(polygon=polygon)
+
+    if polypoint_obj:
+        session.add(polypoint_obj)
+        session.commit()
+        session.refresh(polypoint_obj)
+        plant.polypoint_key = polypoint_obj.polypoint_id
 
     return plant

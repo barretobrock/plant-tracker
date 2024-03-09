@@ -1,6 +1,7 @@
 from enum import Enum
 from flask import (
     Blueprint,
+    current_app,
     flash,
     jsonify,
     redirect,
@@ -8,15 +9,27 @@ from flask import (
     request,
     url_for
 )
+from pathlib import Path
 from typing import (
     Dict,
     List,
     Union
 )
 
+from werkzeug.utils import secure_filename
 from wtforms import Form
 
 from plant_tracker.core.utils import default_if_prop_none
+from plant_tracker.forms.add_name import (
+    AddNameForm,
+    get_name_data_from_form,
+    populate_name_form
+)
+from plant_tracker.forms.add_image import (
+    AddImageForm,
+    get_image_data_from_form,
+    populate_image_form
+)
 from plant_tracker.forms.add_species import (
     AddSpeciesForm,
     get_species_data_from_form,
@@ -28,6 +41,8 @@ from plant_tracker.model import (
     LeafRetentionType,
     LightRequirementType,
     SoilMoistureType,
+    TableAlternateNames,
+    TableImage,
     TablePlantFamily,
     TablePlantHabit,
     TableSpecies,
@@ -144,20 +159,16 @@ def get_species(species_id: int):
             'Habit': {'value': default_if_prop_none(species, 'habit.plant_habit', '?')},
             'Duration': {'value': default_if_prop_none(species, 'duration', '?')},
         }
-        imgs = ['/images/winecup.jpg']
         addl_info = {
 
         }
-        alt_names = []
 
         return render_template(
             'pages/species/species-info.html',
             data=species,
             icon_class_map=icon_class_map,
             basic_info=basic_info,
-            imgs=imgs,
             addl_info=addl_info,
-            alt_names=alt_names
         )
 
 
@@ -190,16 +201,20 @@ def get_all_species():
                 'is_native': {'icon': f'bi-{native_icon}', 'icon_class': 'icon bool', 'name': sp.is_native},
                 'usda_symbol': {'url': wf_link, 'name': sp.usda_symbol},
                 'n_plants': len(sp.plants),
-                'edit': {'url': url_for('species.edit_species', species_id=sp_id),
-                         'icon': 'bi-pencil', 'icon_class': 'icon edit'},
-                'delete': {'url': url_for('species.delete_species', species_id=sp_id),
-                           'icon': 'bi-trash', 'icon_class': 'icon delete'}
+                '': [
+                    {'url': url_for('plant.add_plant', species_id=sp_id), 'icon': 'bi-plus',
+                     'icon_class': 'icon add me-1'},
+                    {'url': url_for('species.edit_species', species_id=sp_id), 'icon': 'bi-pencil',
+                     'icon_class': 'icon edit me-1'},
+                    {'url': url_for('species.delete_species', species_id=sp_id),
+                     'icon': 'bi-trash', 'icon_class': 'icon delete'}
+                ],
             })
     return render_template(
         'pages/species/list-species.html',
         order_list=[3, 'asc'],
         data_rows=data_list,
-        headers=['ID', 'Genus', 'Species', 'Common Name', 'Family', 'Native', 'WF', 'Plants', 'Edit', 'Delete'],
+        headers=['ID', 'Genus', 'Species', 'Common Name', 'Family', 'Native', 'WF', 'Plants', ''],
         table_id='species-table'
     ), 200
 
@@ -225,3 +240,102 @@ def delete_species(species_id: int = None):
                 session.delete(species)
                 flash(f'Species {species.scientific_name} successfully removed', 'success')
         return redirect(url_for('species.get_all_species'))
+
+
+@bp_species.route('/<int:species_id>/image/add', methods=['GET', 'POST'])
+def add_species_image(species_id: int):
+    eng = get_app_eng()
+    form = AddImageForm()
+    with eng.session_mgr() as session:
+        form = populate_image_form(session=session, form=form)
+        if request.method == 'GET':
+            return render_template(
+                'pages/image/add-image.html',
+                form=form,
+                is_edit=False,
+                post_endpoint_url=url_for(request.endpoint, species_id=species_id)
+            )
+        elif request.method == 'POST':
+            image_dir = Path(current_app.root_path).joinpath(f'static/images/species/{species_id}/')
+
+            image = get_image_data_from_form(request=request, image_dir=image_dir)
+            image.species_key = species_id
+            session.add(image)
+            session.commit()
+            session.refresh(image)
+            flash(f'Species image {image.image_id} successfully added', 'success')
+            return redirect(url_for('species.get_species', species_id=species_id))
+
+
+@bp_species.route('/<int:species_id>/altname/add', methods=['GET', 'POST'])
+def add_species_altname(species_id: int):
+    eng = get_app_eng()
+    form = AddNameForm()
+    with eng.session_mgr() as session:
+        form = populate_name_form(session=session, form=form)
+        if request.method == 'GET':
+            return render_template(
+                'pages/altname/add-altname.html',
+                form=form,
+                is_edit=False,
+                post_endpoint_url=url_for(request.endpoint, species_id=species_id)
+            )
+        elif request.method == 'POST':
+            altname = get_name_data_from_form(session=session, form_data=request.form)
+            altname.species_key = species_id
+            session.add(altname)
+            session.commit()
+            session.refresh(altname)
+            flash(f'Species alternative name {altname.alternate_name_id} successfully added', 'success')
+            return redirect(url_for('species.get_species', species_id=species_id))
+
+
+@bp_species.route('/<int:species_id>/altname/<int:alternate_name_id>/edit', methods=['GET', 'POST'])
+def edit_species_altname(species_id: int = None, alternate_name_id: int = None):
+    eng = get_app_eng()
+    form = AddNameForm()
+    with eng.session_mgr() as session:
+        form = populate_name_form(session=session, form=form, alternate_name_id=alternate_name_id)
+        if request.method == 'GET':
+            return render_template(
+                'pages/altname/add-altname.html',
+                form=form,
+                is_edit=True,
+                post_endpoint_url=url_for(request.endpoint, species_id=species_id, alternate_name_id=alternate_name_id)
+            )
+        elif request.method == 'POST':
+            altname = get_name_data_from_form(session=session, form_data=request.form,
+                                              alternate_name_id=alternate_name_id)
+            session.add(altname)
+            flash(f'Species alternative name {altname.alternate_name_id} successfully updated', 'success')
+            return redirect(url_for('species.get_species', species_id=species_id))
+
+
+@bp_species.route('/<int:species_id>/altname/<int:alternate_name_id>/delete', methods=['GET', 'POST'])
+def delete_alt_name(species_id: int = None, alternate_name_id: int = None):
+    eng = get_app_eng()
+    form = ConfirmDeleteForm()
+    with eng.session_mgr() as session:
+        altname: TableAlternateNames
+        altname = session.query(TableAlternateNames). \
+            filter(TableAlternateNames.alternate_name_id == alternate_name_id).one_or_none()
+        if request.method == 'GET':
+            return render_template(
+                'pages/confirm.html',
+                confirm_title=f'Confirm delete of ',
+                confirm_focus=altname.name,
+                confirm_url=url_for('species.delete_alt_name', species_id=species_id,
+                                    alternate_name_id=alternate_name_id),
+                form=form
+            )
+        elif request.method == 'POST':
+            if request.form['confirm']:
+                session.delete(altname)
+                flash(f'Species alt name "{altname.name}" successfully removed', 'success')
+        return redirect(url_for('species.get_species', species_id=species_id))
+
+
+@bp_species.route('/<int:species_id>/maintenance', methods=['GET', 'POST'])
+def get_species_maintenance(species_id: int = None):
+    # TODO!
+    pass

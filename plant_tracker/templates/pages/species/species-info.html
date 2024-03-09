@@ -34,18 +34,18 @@
     <div class="row">
         <div class="col my-2">
             <div class="float-start">
-                <button type="button" class="btn btn-sm btn-outline-success position-relative">
+                <a type="button" class="btn btn-sm btn-outline-success position-relative" href="/plant/by_species/{{ data.species_id }}/all">
                     Plants
                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success">
                         {{data.plants|length}}
                         <span class="visually-hidden">plants</span>
                     </span>
-                </button>
+                </a>
             </div>
             <div class="float-end">
-                <button type="button" class="btn btn-outline-warning btn-sm"><i class="bi-wrench">Maintenance</i></button>
-                <button type="button" class="btn btn-outline-primary btn-sm"><i class="bi-pencil"></i>Edit</button>
-                <button type="button" class="btn btn-outline-danger btn-sm"><i class="bi-trash"></i>Delete</button>
+                <a type="button" class="btn btn-outline-warning btn-sm" href="#"><i class="bi-wrench"> Maintenance</i></a>
+                <a type="button" class="btn btn-outline-primary btn-sm" href="/species/{{ data.species_id }}/edit"><i class="bi-pencil"></i> Edit</a>
+                <a type="button" class="btn btn-outline-danger btn-sm" href="/species/{{ data.species_id }}/delete"><i class="bi-trash"></i> Delete</a>
             </div>
         </div>
     </div>
@@ -67,16 +67,18 @@
                 <hr>
                 <h5 class="card-title">
                     Alternate Names
-                    <div class="float-end">
-                        <button type="button" class="btn btn-outline-success btn-sm"><i class="bi-plus"></i>Add Name</button>
-                    </div>
+                    <span class="float-end">
+                        <a type="button" href="/species/{{data.species_id}}/altname/add" class="btn btn-outline-success btn-sm"><i class="bi-plus"></i>Add Name</a>
+                    </span>
                 </h5>
 
-                <p class="card-text">
-                    {% for alt_name in alt_names %}
-                        <div>{{ alt_name }}</div>
+                <div class="card-text">
+                    {% for alt_name in data.alternate_names %}
+                        <span>{{ alt_name.name }}</span>
+                        <a type="button" class="btn btn-outline-primary btn-sm inline-button"  href="/species/{{ data.species_id }}/altname/{{ alt_name.alternate_name_id }}/edit" ><i class="bi-pencil"></i></a>
+                        <a type="button" class="btn btn-outline-danger btn-sm inline-button"  href="/species/{{ data.species_id }}/altname/{{ alt_name.alternate_name_id }}/delete" ><i class="bi-trash"></i></a>
                     {% endfor %}
-                </p>
+                </div>
                 <hr>
                 <h5 class="card-title">Bloom Info</h5>
                 <div class="card-text">
@@ -107,17 +109,23 @@
                 <h4 class="card-title">
                     Photos
                     <div class="float-end">
-                        <button type="button" class="btn btn-outline-success btn-sm"><i class="bi-plus"></i>Add Photo</button>
+                        <a type="button" href="/species/{{data.species_id}}/image/add" class="btn btn-outline-success btn-sm"><i class="bi-plus"></i>Add Photo</a>
                     </div>
                 </h4>
 
                 <div id="plant-pic-carousel" class="carousel slide" data-bs-slide="carousel">
                     <div class="carousel-inner">
-                        {% for img in imgs %}
+                        {% if data.images %}
+                            {% for img in data.images %}
+                                <div class="carousel-item active">
+                                    <img src="{{ img.image_path }}" class="d-block w-100" alt="plant-pic">
+                                </div>
+                            {% endfor %}
+                        {% else %}
                             <div class="carousel-item active">
-                                <img src="{{ img }}" class="d-block w-100" alt="plant-pic">
+                                <img src="/images/winecup.jpg" class="d-block w-100" alt="plant-pic">
                             </div>
-                        {% endfor %}
+                        {% endif %}
                     </div>
                     <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="prev">
                         <span class="carousel-control-prev-icon" aria-hidden="true"></span>

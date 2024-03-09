@@ -1,22 +1,12 @@
-from datetime import (
-    datetime,
-    timedelta,
-)
-from typing import List
-
 from flask_wtf import FlaskForm
 from wtforms import (
-    DateField,
-    BooleanField,
     SelectField,
-    SelectMultipleField,
     StringField,
     SubmitField,
     TextAreaField
 )
 from wtforms.validators import DataRequired
 
-from plant_tracker.core.utils import default_if_prop_none
 from plant_tracker.model import (
     DurationType,
     LeafRetentionType,
@@ -29,7 +19,9 @@ from plant_tracker.model import (
 )
 from plant_tracker.forms.helper import (
     DataListField,
+    apply_field_data_to_form,
     bool_with_unknown_list,
+    extract_form_data_to_obj,
     list_with_default,
     populate_form
 )
@@ -40,9 +32,11 @@ species_attr_map = {
     'species': 'species',
     'family': {
         'tbl_key': 'plant_family.scientific_name',
+        'sub_obj': TablePlantFamily
     },
     'habit': {
         'tbl_key': 'habit.plant_habit',
+        'sub_obj': TablePlantHabit
     },
     'duration': {
         'tbl_key': 'duration',
@@ -156,33 +150,17 @@ def populate_species_form(session, form: AddSpeciesForm, species_id: int = None)
         species: TableSpecies
         species = session.query(TableSpecies).filter(TableSpecies.species_id == species_id).one_or_none()
         if species is None:
+            # TODO: Probably need to throw exception on this.
             return form
 
-        form_field_map = {}
-        for attr, attr_details in species_attr_map.items():
-            if isinstance(attr_details, str):
-                form_field_map[attr] = species.__getattribute__(attr)
-            elif isinstance(attr_details, dict):
-                default_var = default_if_prop_none(species, attr_details['tbl_key'], attr_details.get('empty_var', ''))
+        species_attr_map['family']['choices'] = fams
+        species_attr_map['habit']['choices'] = habits
 
-                choices = None
-                if 'choices' in attr_details.keys():
-                    choices = attr_details['choices']
-                elif attr == 'family':
-                    choices = fams
-                elif attr == 'habit':
-                    choices = habits
+        form_field_map = apply_field_data_to_form(species, species_attr_map)
 
-                if default_var not in choices:
-                    # Probably bool val, so coerce back to string
-                    default_var = 'yes' if default_var is True else 'no'
-
-                form_field_map[attr] = {
-                    'default': default_if_prop_none(species, attr_details['tbl_key'], default=default_var),
-                    'choices': list_with_default(choices, default=default_var)
-                }
         # Any cleanup of data should happen here
 
+        # Apply collected data to form
         form = populate_form(form, form_field_map)
 
     return form
@@ -200,30 +178,8 @@ def get_species_data_from_form(session, form_data, species_id: int = None) -> Ta
         # New family object
         species = TableSpecies()
 
-    for attr, attr_details in species_attr_map.items():
-        attr_data = form_data[attr]
-        if attr_data in bool_with_unknown_list:
-            if attr_data == 'unknown':
-                attr_data = None
-            else:
-                attr_data = attr_data == 'yes'
-        elif attr_data == '':
-            continue
-
-        if isinstance(attr_details, dict):
-            attr_table_obj_name = attr_details['tbl_key']
-        else:
-            attr_table_obj_name = attr_details
-        if '.' in attr_table_obj_name:
-            # nested value
-            sub_obj_name, sub_obj_attr_name = attr_table_obj_name.split('.', maxsplit=1)
-            sub_obj = species.__getattribute__(sub_obj_name)
-            if sub_obj is None or sub_obj.__getattribute__(sub_obj_attr_name) != attr_data:
-                # Swap nested objects by querying for the new one
-                sub_obj = session.query(TablePlantFamily).filter(TablePlantFamily.scientific_name == attr_data).one_or_none()
-                species.__setattr__(sub_obj_name, sub_obj)
-        else:
-            species.__setattr__(attr_table_obj_name, attr_data)
+    species = extract_form_data_to_obj(form_data=form_data, table_obj=species,
+                                       obj_attr_map=species_attr_map, session=session)
 
     # Handle genus/species migration into scientific name field
     genus = species.genus
