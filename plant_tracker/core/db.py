@@ -12,19 +12,18 @@ from plant_tracker.config import DevelopmentConfig, ProductionConfig
 from plant_tracker.model import (
     Base,
     TableAlternateNames,
+    TableImage,
     TableMaintenanceLog,
     TableObservationLog,
     TablePlant,
     TablePlantFamily,
     TablePlantHabit,
-    TablePlantImage,
     TablePlantRegion,
     TablePlantSubRegion,
     TablePolypoint,
     TableScheduledMaintenanceLog,
     TableScheduledWateringLog,
     TableSpecies,
-    TableSpeciesImage,
     TableWateringLog
 )
 
@@ -33,19 +32,18 @@ class DBAdmin:
     """For holding all the various ETL processes, delimited by table name or function of data stored"""
     TABLES = [
         TableAlternateNames,
+        TableImage,
         TableMaintenanceLog,
         TableObservationLog,
         TablePlant,
         TablePlantFamily,
         TablePlantHabit,
-        TablePlantImage,
         TablePlantRegion,
         TablePlantSubRegion,
         TablePolypoint,
         TableScheduledMaintenanceLog,
         TableScheduledWateringLog,
         TableSpecies,
-        TableSpeciesImage,
         TableWateringLog,
     ]
 

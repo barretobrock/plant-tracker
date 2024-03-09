@@ -5,10 +5,9 @@ from typing import (
     Union
 )
 
-from geoalchemy2 import Geometry
 from geoalchemy2.shape import from_shape
 from shapely import affinity
-from shapely.geometry import Polygon, Point, MultiPoint
+from shapely.geometry import Polygon
 from sqlalchemy import (
     VARCHAR,
     Column,
@@ -71,8 +70,3 @@ class TablePlantSubRegion(Base):
 
     def __repr__(self):
         return self.build_repr_for_class(self)
-
-
-
-
-

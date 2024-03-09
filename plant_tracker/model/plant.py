@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 from sqlalchemy import (
-    VARCHAR,
     Boolean,
     Column,
     Date,
@@ -43,23 +42,11 @@ class TablePlant(Base):
     is_in_container: bool = Column(Boolean)
     plant_source = Column(Enum(PlantSourceType))
     date_planted: datetime.date = Column(Date, nullable=False)
-    images = relationship('TablePlantImage', back_populates='plant')
+    images = relationship('TableImage', back_populates='plant')
     observation_logs = relationship('TableObservationLog', back_populates='plant')
     maintenance_logs = relationship('TableMaintenanceLog', back_populates='plant')
     watering_logs = relationship('TableWateringLog', back_populates='plant')
     is_dead: bool = Column(Boolean, default=False)
-
-    def __repr__(self) -> str:
-        return self.build_repr_for_class(self)
-
-
-@dataclass
-class TablePlantImage(Base):
-    """plant_image"""
-    plant_image_id: int = Column(Integer, primary_key=True, autoincrement=True)
-    plant_key: int = Column(ForeignKey(TablePlant.plant_id, ondelete='CASCADE'), nullable=False)
-    plant = relationship('TablePlant', back_populates='images')
-    image_url: str = Column(VARCHAR, nullable=False, unique=True)
 
     def __repr__(self) -> str:
         return self.build_repr_for_class(self)

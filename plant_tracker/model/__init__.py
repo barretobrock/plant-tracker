@@ -1,4 +1,5 @@
 from .base import Base
+from .image import TableImage
 from .logs import (
     MaintenanceType,
     ObservationType,
@@ -15,8 +16,7 @@ from .maps import (
 )
 from .plant import (
     PlantSourceType,
-    TablePlant,
-    TablePlantImage
+    TablePlant
 )
 from .species import (
     DurationType,
@@ -27,6 +27,5 @@ from .species import (
     TablePlantFamily,
     TablePlantHabit,
     TableSpecies,
-    TableSpeciesImage,
     WaterRequirementType
 )

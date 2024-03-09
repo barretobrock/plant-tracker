@@ -98,7 +98,7 @@ class TableSpecies(Base):
     care_notes: str = Column(VARCHAR)
     propagation_notes: str = Column(VARCHAR)
     alternate_names = relationship('TableAlternateNames', back_populates='species')
-    images = relationship('TableSpeciesImage', back_populates='species')
+    images = relationship('TableImage', back_populates='species')
     plants = relationship('TablePlant', back_populates='species')
     scheduled_maintenance_logs = relationship('TableScheduledMaintenanceLog', back_populates='species')
     scheduled_watering_logs = relationship('TableScheduledWateringLog', back_populates='species')
@@ -116,18 +116,6 @@ class TableAlternateNames(Base):
     species_key: int = Column(ForeignKey(TableSpecies.species_id, ondelete='CASCADE'), nullable=False)
     species = relationship(TableSpecies, back_populates='alternate_names')
     is_scientific: bool = Column(Boolean, default=False, nullable=False)
-
-    def __repr__(self) -> str:
-        return self.build_repr_for_class(self)
-
-
-@dataclass
-class TableSpeciesImage(Base):
-    """species_image"""
-    species_image_id: int = Column(Integer, primary_key=True, autoincrement=True)
-    species_key: int = Column(ForeignKey(TableSpecies.species_id, ondelete='CASCADE'), nullable=False)
-    species = relationship(TableSpecies, back_populates='images')
-    image_url: str = Column(VARCHAR, nullable=False, unique=True)
 
     def __repr__(self) -> str:
         return self.build_repr_for_class(self)
