@@ -109,7 +109,8 @@ def get_all_plants(species_id: int = None):
         for pt in plants:
             pt_id = pt.plant_id
             data_list.append({
-                'id': {'url': url_for('plant.get_plant', plant_id=pt_id), 'name': pt_id},
+                'id': {'url': url_for('plant.get_plant', plant_id=pt_id), 'text': pt_id,
+                       'icon': 'bi-info-circle'},
                 'scientific_name': pt.species.scientific_name,
                 'common_name': pt.species.common_name,
                 'plant_source': default_if_prop_none(pt, 'plant_source'),
@@ -117,9 +118,9 @@ def get_all_plants(species_id: int = None):
                 'subregion': default_if_prop_none(pt, 'sub_region.sub_region_name'),
                 '': [
                     {'url': url_for('plant.edit_plant', plant_id=pt_id),
-                     'icon': 'bi-pencil', 'icon_class': 'icon edit me-1'},
+                     'icon': 'bi-pencil', 'val_class': 'icon edit me-1'},
                     {'url': url_for('plant.delete_plant', plant_id=pt_id),
-                     'icon': 'bi-trash', 'icon_class': 'icon delete'}
+                     'icon': 'bi-trash', 'val_class': 'icon delete'}
                 ]
             })
     return render_template(

@@ -60,18 +60,20 @@
 
                                     {% if value is iterable and value is not string %}
                                         {% for val in value %}
-                                            {% set icon_class = val.icon_class if val.icon_class else ""  %}
+                                            {% set val_class = val.val_class if val.val_class else ""  %}
                                             {% set icon = val.icon if val.icon else ""  %}
-                                            {% set text = val.name if val.name is not none else ""  %}
+                                            {% set text = val.text if val.text is not none else ""  %}
 
                                             {% if val.url %}
                                                 <a href="{{ val.url }}" target="{{ '_blank' if val.url.startswith('http') else '_parent' }}">
-                                                    <i class="{{ icon_class }} {{ icon }}">
+                                                    <i class="{{ val_class }} {{ icon }}">
                                                         {{ text }}
                                                     </i>
                                                 </a>
+                                            {% elif val.icon %}
+                                                <i class="{{ val_class }} {{ icon }}">{{ text }}</i>
                                             {% else %}
-                                                <i class="{{ icon_class }} {{ icon }}">{{ text }}</i>
+                                                <span class="{{ val_class }}">{{ text }}</span>
                                             {% endif %}
                                         {% endfor %}
                                     {% else %}

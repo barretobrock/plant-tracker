@@ -30,6 +30,11 @@ from plant_tracker.forms.add_image import (
     get_image_data_from_form,
     populate_image_form
 )
+from plant_tracker.forms.add_scheduled_maintenance import (
+    AddScheduledMaintenanceForm,
+    get_scheduled_maintenance_data_from_form,
+    populate_scheduled_maintenance_form
+)
 from plant_tracker.forms.add_species import (
     AddSpeciesForm,
     get_species_data_from_form,
@@ -96,7 +101,7 @@ def edit_species(species_id: int = None):
             species = get_species_data_from_form(session=session, form_data=request.form, species_id=species_id)
             session.add(species)
             flash(f'Species {species.scientific_name} successfully updated', 'success')
-            return redirect(url_for('species.get_all_species'))
+            return redirect(url_for('species.get_species', species_id=species_id))
 
 
 @bp_species.route('/api/<int:species_id>', methods=['GET'])
@@ -193,21 +198,22 @@ def get_all_species():
             else:
                 native_icon = 'x'
             data_list.append({
-                'id': {'url': url_for('species.get_species', species_id=sp_id), 'name': sp_id},
+                'id': {'url': url_for('species.get_species', species_id=sp_id), 'text': sp_id,
+                       'icon': 'bi-info-circle'},
                 'genus': sp.genus,
                 'species': sp.species,
                 'common_name': sp.common_name,
                 'family': fam_name,
-                'is_native': {'icon': f'bi-{native_icon}', 'icon_class': 'icon bool', 'name': sp.is_native},
-                'usda_symbol': {'url': wf_link, 'name': sp.usda_symbol},
-                'n_plants': len(sp.plants),
+                'is_native': {'icon': f'bi-{native_icon}', 'val_class': 'icon bool'},
+                'usda_symbol': {'url': wf_link, 'text': sp.usda_symbol},
+                'n_plants': {'text': len(sp.plants), 'val_class': 'zero' if len(sp.plants) == 0 else ''},
                 '': [
-                    {'url': url_for('plant.add_plant', species_id=sp_id), 'icon': 'bi-plus',
-                     'icon_class': 'icon add me-1'},
+                    {'url': url_for('plant.add_plant', species_id=sp_id), 'icon': 'bi-plus-circle',
+                     'val_class': 'icon add me-1'},
                     {'url': url_for('species.edit_species', species_id=sp_id), 'icon': 'bi-pencil',
-                     'icon_class': 'icon edit me-1'},
+                     'val_class': 'icon edit me-1'},
                     {'url': url_for('species.delete_species', species_id=sp_id),
-                     'icon': 'bi-trash', 'icon_class': 'icon delete'}
+                     'icon': 'bi-trash', 'val_class': 'icon delete'}
                 ],
             })
     return render_template(
@@ -335,7 +341,48 @@ def delete_alt_name(species_id: int = None, alternate_name_id: int = None):
         return redirect(url_for('species.get_species', species_id=species_id))
 
 
-@bp_species.route('/<int:species_id>/maintenance', methods=['GET', 'POST'])
-def get_species_maintenance(species_id: int = None):
-    # TODO!
-    pass
+@bp_species.route('/<int:species_id>/scheduled_maintenance/add', methods=['GET', 'POST'])
+def add_species_scheduled_maintenance(species_id: int = None):
+    eng = get_app_eng()
+    form = AddScheduledMaintenanceForm()
+    with eng.session_mgr() as session:
+        form = populate_scheduled_maintenance_form(session=session, form=form)
+        if request.method == 'GET':
+            return render_template(
+                'pages/scheduled-maintenance/add-scheduled-maintenance.html',
+                form=form,
+                is_edit=False,
+                post_endpoint_url=url_for(request.endpoint, species_id=species_id)
+            )
+        elif request.method == 'POST':
+            schmaint = get_scheduled_maintenance_data_from_form(session=session, form_data=request.form)
+            schmaint.species_key = species_id
+            session.add(schmaint)
+            session.commit()
+            session.refresh(schmaint)
+            flash(f'Scheduled maintenace #{schmaint.maintenance_schedule_id} successfully added', 'success')
+            return redirect(url_for('species.get_species', species_id=species_id))
+
+
+@bp_species.route('/<int:species_id>/scheduled_maintenance/<int:maintenance_schedule_id>/edit', methods=['GET', 'POST'])
+def edit_species_scheduled_maintenance(species_id: int = None, maintenance_schedule_id: int = None):
+    eng = get_app_eng()
+    form = AddScheduledMaintenanceForm()
+    with eng.session_mgr() as session:
+        form = populate_scheduled_maintenance_form(session=session, form=form,
+                                                   maintenance_schedule_id=maintenance_schedule_id)
+        if request.method == 'GET':
+            return render_template(
+                'pages/scheduled-maintenance/add-scheduled-maintenance.html',
+                form=form,
+                is_edit=True,
+                post_endpoint_url=url_for(request.endpoint, species_id=species_id,
+                                          maintenance_schedule_id=maintenance_schedule_id)
+            )
+        elif request.method == 'POST':
+            schmaint = get_scheduled_maintenance_data_from_form(
+                session=session, form_data=request.form, maintenance_schedule_id=maintenance_schedule_id
+            )
+            session.add(schmaint)
+            flash(f'Scheduled maintenace #{schmaint.maintenance_schedule_id} successfully updated', 'success')
+            return redirect(url_for('species.get_species', species_id=species_id))

@@ -8,7 +8,6 @@ from typing import (
 )
 
 from wtforms import (
-    FormField,
     Form,
     StringField
 )
@@ -26,7 +25,7 @@ class DataListField(StringField):
 def list_with_default(obj: Union[List[str], Type[StrEnum], Iterable], default: str = '') -> List[str]:
     if isinstance(obj, (EnumType, range)):
         obj = list(obj)
-    return [default] + obj
+    return [default] + obj if default not in obj else obj
 
 
 def apply_field_data_to_form(
@@ -41,16 +40,19 @@ def apply_field_data_to_form(
         if isinstance(attr_details, str):
             form_field_map[attr_name] = table_obj.__getattribute__(attr_name)
         elif isinstance(attr_details, dict):
-            default_var = default_if_prop_none(table_obj, attr_details['tbl_key'], attr_details.get('emtpy_var', ''))
+            empty_var = attr_details.get('empty_var', '')
+            default_var = default_if_prop_none(table_obj, attr_details['tbl_key'], empty_var)
 
             choices = attr_details.get('choices')
             if isinstance(default_var, bool):
                 # Coerce bools back into string for select rendering
                 default_var = 'yes' if default_var is True else 'no'
+            elif isinstance(default_var, int):
+                default_var = str(default_var)
 
             form_field_map[attr_name] = {
-                'default': default_if_prop_none(table_obj, attr_details['tbl_key'], default=default_var),
-                'choices': list_with_default(choices, default=default_var)
+                'default': default_var,
+                'choices': list_with_default(choices, default=empty_var)
             }
 
     return form_field_map
@@ -82,9 +84,9 @@ def extract_form_data_to_obj(form_data, table_obj, obj_attr_map, session):
                 attr_form_data = None
             else:
                 attr_form_data = attr_form_data == 'yes'
-        elif attr_form_data == '':
-            # Don't apply to table object
-            continue
+        elif attr_form_data == 'y' or attr_name.startswith('is_'):
+            # Handle boolean conversion
+            attr_form_data = attr_form_data == 'y'
 
         if isinstance(attr_details, dict):
             att_table_obj_name = attr_details['tbl_key']
@@ -99,12 +101,21 @@ def extract_form_data_to_obj(form_data, table_obj, obj_attr_map, session):
 
             sub_obj_name, sub_obj_attr_name = att_table_obj_name.split('.', maxsplit=1)
             sub_obj = table_obj.__getattribute__(sub_obj_name)
-            if sub_obj is None or sub_obj.__getattribute__(sub_obj_attr_name) != attr_form_data:
+            if ((sub_obj is None or sub_obj.__getattribute__(sub_obj_attr_name) != attr_form_data)
+                    and attr_form_data != ''):
                 # Swap nested objects by querying for the new one
                 sub_obj = session.query(sub_obj_class).\
                     filter(sub_obj_class.__getattribute__(sub_obj_attr_name) == attr_form_data).one_or_none()
                 table_obj.__setattr__(sub_obj_name, sub_obj)
         else:
-            table_obj.__setattr__(att_table_obj_name, attr_form_data)
+            table_obj_val = table_obj.__getattribute__(att_table_obj_name)
+            if table_obj_val is not None and attr_form_data == '':
+                # Nullify object
+                table_obj.__setattr__(att_table_obj_name, None)
+            elif table_obj_val is None and attr_form_data == '':
+                # Don't apply form data to table; this field wasn't modified
+                continue
+            else:
+                table_obj.__setattr__(att_table_obj_name, attr_form_data)
 
     return table_obj

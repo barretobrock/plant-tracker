@@ -11,16 +11,17 @@
                 <div class="col">
                     <div class="species-title">
                         {{data.scientific_name}}
-                        <span class="species-badge badge rounded-pill bg-{{ 'success' if data.is_native else 'warning' }}">
-                            {% if data.is_native is none %}
-                                {{ "native?" }}
-                            {% elif data.is_native %}
-                                {{ "native" }}
-                            {% else %}
-                                {{ "not native" }}
-                            {% endif %}
-                            {{ 'not' if data.is_native == False else '' ~ ' native' ~ '?' if data.is_native is none else '' }}
-                        </span>
+                        {% if data.is_native is none %}
+                            {% set native_text = "native?" %}
+                            {% set native_color = "warning" %}
+                        {% elif data.is_native %}
+                            {% set native_text = "native" %}
+                            {% set native_color = "success" %}
+                        {% else %}
+                            {% set native_text = "not native" %}
+                            {% set native_color = "danger" %}
+                        {% endif %}
+                        <span class="species-badge badge rounded-pill bg-{{ native_color }}">{{ native_text }}</span>
                         {% for item_name, item_dict in icon_class_map.items() %}
                             <i class="icon {{ item_dict.map[item_dict.value] }} {{ item_dict.addl_class}}" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ item_name }} - {{ item_dict.value }}"></i>
                         {% endfor %}
@@ -86,7 +87,7 @@
                         <strong>Start Month: </strong>{{ data.bloom_start_month }}
                         <strong>End Month: </strong>{{ data.bloom_end_month }}
                     </div>
-                    <div class="info-line"><strong>Notes: </strong>{{ data.bloom_notes }}</div>
+
                     {% set bloom_start = data.bloom_start_month if data.bloom_start_month else 0 %}
                     {% set bloom_end = data.bloom_end_month if data.bloom_end_month else 0 %}
                     <div class="bloom-months-section">
@@ -100,6 +101,10 @@
                         {% endfor %}
                     </div>
 
+                    <div class="info-line">
+                        <p>{{ data.bloom_notes if data.bloom_notes else '' }}</p>
+                    </div>
+
                 </div>
 
             </div>
@@ -108,11 +113,10 @@
             <div class="card-body shadow p-3 mb-5 rounded">
                 <h4 class="card-title">
                     Photos
-                    <div class="float-end">
-                        <a type="button" href="/species/{{data.species_id}}/image/add" class="btn btn-outline-success btn-sm"><i class="bi-plus"></i>Add Photo</a>
-                    </div>
+                    <span class="float-end">
+                        <a type="button" href="/species/{{data.species_id}}/image/add" class="btn btn-outline-success btn-sm"><i class="bi-plus-circle-fill"></i></a>
+                    </span>
                 </h4>
-
                 <div id="plant-pic-carousel" class="carousel slide" data-bs-slide="carousel">
                     <div class="carousel-inner">
                         {% if data.images %}
@@ -144,29 +148,36 @@
         <div class="col">
             <div class="card-body shadow p-3 mb-5 rounded">
                 <h4 class="card-title">
-                    Upcoming Tasks
-                    <div class="float-end">
-                        <button type="button" class="btn btn-outline-success btn-sm"><i class="bi-plus"></i>Add Task</button>
-                    </div>
+                    Scheduled Maintenance
+                    <span class="float-end">
+                        <a type="button" href="/species/{{data.species_id}}/scheduled_maintenance/add" class="btn btn-outline-success btn-sm"><i class="bi-plus-circle-fill"></i></a>
+                    </span>
                 </h4>
-            </div>
-        </div>
-        <div class="col">
-            <div class="card-body shadow p-3 mb-5 rounded">
-                <h4 class="card-title">Recent Tasks</h4>
-            </div>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col">
-            <div class="card-body shadow p-3 mb-5 rounded">
-                <h4 class="card-title">Observations</h4>
-                <p class="card-text">
-                    {% for obs in observations %}
-                        <span>{{ obs.name }}</span>
-                    {% endfor %}
-                </p>
-
+                 <table class="table table-sm table-bordered table-striped table-dark">
+                     <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Freq</th>
+                            <th>Start</th>
+                            <th>End</th>
+                            <th>Notes</th>
+                            <th></th>
+                        </tr>
+                     </thead>
+                     {% for maint in data.scheduled_maintenance_logs %}
+                        <tr class="{{ '' if maint.is_enabled else 'disabled' }}">
+                            <td>{{ maint.maintenance_type }}</td>
+                            <td>{{ maint.maintenance_frequency }}</td>
+                            <td>{{ maint.maintenance_period_start.strftime("%b %d") }}</td>
+                            <td>{{ maint.maintenance_period_end.strftime("%b %d") }}</td>
+                            <td>{{ maint.notes }}</td>
+                            <td>
+                                <a type="button" class="btn btn-outline-primary btn-sm inline-button"  href="/species/{{ data.species_id }}/scheduled_maintenance/{{ maint.maintenance_schedule_id }}/edit" ><i class="bi-pencil"></i></a>
+                                <a type="button" class="btn btn-outline-danger btn-sm inline-button"  href="/species/{{ data.species_id }}/scheduled_maintenance/{{ maint.maintenance_schedule_id }}/delete" ><i class="bi-trash"></i></a>
+                            </td>
+                        </tr>
+                     {% endfor %}
+                 </table>
             </div>
         </div>
     </div>

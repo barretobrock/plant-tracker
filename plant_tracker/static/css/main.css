@@ -1,5 +1,6 @@
 :root {
     --logo-green: #34c100;
+    --txt-gray: #858585;
     --txt-green: #76ff6a;
     --txt-blue: cornflowerblue;
     --txt-brown: #8c6406;
@@ -54,6 +55,9 @@ a.nav-link.active {
 
 .bloom-badge {
     width: 27px;
+}
+.bloom-badge.bg-light {
+    color: var(--txt-gray);
 }
 
 .inline-button {

@@ -1,0 +1,17 @@
+{% import 'macros/form.html' as f %}
+{% extends 'base.html' %}
+{% block head %}
+    {{ super() }}
+{% endblock %}
+{% block content %}
+    {% set data_rows = [
+        ['maintenance_type', 'is_enabled'],
+        ['maintenance_frequency', 'maintenance_period_start', 'maintenance_period_end'],
+        ['notes']
+    ] %}
+
+
+    {% call f.render_form(form, data_rows, post_endpoint_url, is_file_upload=True) %}
+        {{ 'Edit' if is_edit else 'Add' }} a scheduled maintenance item
+    {% endcall %}
+{% endblock %}

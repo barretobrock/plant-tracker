@@ -39,3 +39,7 @@ td .icon.bool.bi-check {
 td .icon.bool.bi-x {
     color: var(--txt-red)
 }
+
+td .zero {
+    filter: brightness(45%);
+}

@@ -81,11 +81,11 @@ species_attr_map = {
     'usda_symbol': 'usda_symbol',
     'bloom_start_month': {
         'tbl_key': 'bloom_start_month',
-        'choices': range(1, 13)
+        'choices': list(map(str, range(1, 13)))
     },
     'bloom_end_month': {
         'tbl_key': 'bloom_end_month',
-        'choices': range(1, 13)
+        'choices': list(map(str, range(1, 13)))
     },
     'bloom_notes': 'bloom_notes',
     'care_notes': 'care_notes',

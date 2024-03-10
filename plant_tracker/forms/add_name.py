@@ -6,8 +6,6 @@ from wtforms import (
 
 from plant_tracker.model import TableAlternateNames
 from plant_tracker.forms.helper import (
-    apply_field_data_to_form,
-    extract_form_data_to_obj,
     populate_form
 )
 
