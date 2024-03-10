@@ -20,6 +20,7 @@ from plant_tracker.model import (
     MaintenanceType,
     ObservationType,
     PlantSourceType,
+    ScheduledMaintenanceFrequencyType,
     TableMaintenanceLog,
     TableObservationLog,
     TablePlant,
@@ -84,6 +85,7 @@ class ETL(DBAdmin):
                     self.log.debug(f'Bypassing {tbl_obj.__name__}')
 
     def load_species(self):
+        now = datetime.datetime.now()
         with self.session_mgr() as session:
             families = [(x.plant_family_id, x.scientific_name) for x in session.query(TablePlantFamily).all()]
             habits = [(x.plant_habit_id, x.plant_habit) for x in session.query(TablePlantHabit).all()]
@@ -107,13 +109,14 @@ class ETL(DBAdmin):
             if pruning_notes_raw is not None:
                 self.log.debug('Adding pruning notes...')
                 date_range = re.search(r'\d+-\d+ to \d+-\d+', pruning_notes_raw).group().split()
+                start_date = datetime.date(now.year, int(date_range[0].split('-')[0]), int(date_range[0].split('-')[1]))
+                end_date = datetime.date(now.year, int(date_range[-1].split('-')[0]), int(date_range[-1].split('-')[1]))
                 info = re.sub(r'\d+-\d+ to \d+-\d+', '', pruning_notes_raw).strip()
                 pruning_tbl = TableScheduledMaintenanceLog(
+                    is_enabled=True,
                     maintenance_type=MaintenanceType.PRUNE,
-                    maintenance_period_start_mm=int(date_range[0].split('-')[0]),
-                    maintenance_period_start_dd=int(date_range[0].split('-')[1]),
-                    maintenance_period_end_mm=int(date_range[-1].split('-')[0]),
-                    maintenance_period_end_dd=int(date_range[-1].split('-')[1]),
+                    maintenance_period_start=start_date,
+                    maintenance_period_end=end_date,
                     notes=info
                 )
             with self.session_mgr() as session:

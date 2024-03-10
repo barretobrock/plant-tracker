@@ -3,6 +3,7 @@ from .image import TableImage
 from .logs import (
     MaintenanceType,
     ObservationType,
+    ScheduledMaintenanceFrequencyType,
     TableMaintenanceLog,
     TableObservationLog,
     TableScheduledMaintenanceLog,

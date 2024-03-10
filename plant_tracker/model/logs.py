@@ -21,6 +21,14 @@ from .species import TableSpecies
 class MaintenanceType(StrEnum):
     PRUNE = 'prune'
     FERTILIZE = 'fertilize'
+    MULCH = 'mulch'
+    CLEAN = 'clean'
+
+
+class ScheduledMaintenanceFrequencyType(StrEnum):
+    ANNUAL = 'annually'
+    QUARTERLY = 'quarterly'
+    MONTHLY = 'monthly'
 
 
 class ObservationType(StrEnum):
@@ -87,11 +95,13 @@ class TableScheduledMaintenanceLog(Base):
     maintenance_schedule_id: int = Column(Integer, primary_key=True, autoincrement=True)
     species_key: int = Column(ForeignKey(TableSpecies.species_id, ondelete='CASCADE'), nullable=False)
     species = relationship(TableSpecies, back_populates='scheduled_maintenance_logs')
+    is_enabled: bool = Column(Boolean, default=False)
     maintenance_type = Column(Enum(MaintenanceType), nullable=False)
-    maintenance_period_start_mm: int = Column(Integer, nullable=False)
-    maintenance_period_start_dd: int = Column(Integer, nullable=False)
-    maintenance_period_end_mm: int = Column(Integer, nullable=False)
-    maintenance_period_end_dd: int = Column(Integer, nullable=False)
+    maintenance_frequency = Column(Enum(ScheduledMaintenanceFrequencyType), nullable=False,
+                                   default=ScheduledMaintenanceFrequencyType.ANNUAL)
+    maintenance_period_start: datetime.date = Column(Date, nullable=False)
+    maintenance_period_end: datetime.date = Column(Date, nullable=False)
+    next_maintenance_cycle: datetime.date = Column(Date)
     notes: str = Column(VARCHAR)
 
     def __repr__(self):
@@ -106,7 +116,7 @@ class TableScheduledWateringLog(Base):
     species_key: int = Column(ForeignKey(TableSpecies.species_id, ondelete='CASCADE'), nullable=False)
     species = relationship(TableSpecies, back_populates='scheduled_watering_logs')
     is_enabled: bool = Column(Boolean, default=False)
-    monthly_frequency_in_days: str = Column(VARCHAR)
+    monthly_frequency_in_days: str = Column(VARCHAR)  # e.g., 12,10,8,7,7,6,6,6,7,8,10,12
     next_day_due: datetime.date = Column(Date)
     notes: str = Column(VARCHAR)
 
