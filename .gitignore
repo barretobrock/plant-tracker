@@ -1,3 +1,5 @@
+plant_tracker/static/images/species
+plant_tracker/static/images/plant
 *.bak
 .idea
 *.csv

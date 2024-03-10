@@ -7,3 +7,7 @@
 .form-control:focus {
     color: var(--txt-green);
 }
+
+.img-preview img {
+    height: 200px;
+}

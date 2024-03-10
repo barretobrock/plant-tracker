@@ -19,7 +19,9 @@
                 {%- for item in row %}
                     <div class="col">
                         {% set fieldclass = "" %}
-                        {% if form[item].type != 'BooleanField' %}
+                        {% if form[item].type == 'HiddenField' %}
+                            {% set fieldclass = fieldclass ~ " py-3" %}
+                        {% elif form[item].type != 'BooleanField' %}
                             {% set fieldclass = fieldclass ~ " form-floating" %}
                         {% endif %}
                         <fieldset class="{{ fieldclass }}">
@@ -38,6 +40,42 @@
                                         <option value="{{ entry }}">
                                     {% endfor %}
                                 </datalist>
+                            {% elif form[item].type == 'HiddenField' %}
+                                <script>
+                                    document.onpaste = function (event) {
+                                        var items = (event.clipboardData || event.originalEvent.clipboardData).items;
+                                        console.log(JSON.stringify(items));  // this yields MIME types
+                                        for (index in items) {
+                                            var item = items[index];
+                                            if (item.kind === 'file') {
+                                                var blob = item.getAsFile();
+                                                var reader = new FileReader();
+                                                reader.onload = function (event) {
+                                                    var data_url_elem = document.getElementById('image_data_url');
+                                                    console.log(event.target.result)
+                                                    data_url_elem.value = event.target.result;
+                                                    // create an image viewer
+                                                    var data_row = data_url_elem.parentElement.parentElement.parentElement;
+                                                    var image_row = document.createElement('div');
+                                                    image_row.setAttribute('class', 'row mb-3')
+                                                    var image_col = document.createElement('div');
+                                                    image_col.setAttribute('class', 'col img-preview');
+                                                    var image_info = document.createElement('div');
+                                                    var image = document.createElement('img');
+                                                    image.setAttribute('src', event.target.result)
+                                                    image_info.innerText = 'Image details: ' + image.naturalHeight + 'x' + image.naturalWidth + ' Ratio: ' + image.naturalHeight / image.naturalWidth;
+                                                    image_col.appendChild(image_info)
+                                                    image_col.appendChild(image);
+                                                    image_row.appendChild(image_col)
+                                                    data_row.parentNode.insertBefore(image_col, data_row.nextSibling);
+                                                };  // data url
+                                                reader.readAsDataURL(blob);
+                                            }
+                                        }
+
+                                    }
+                                </script>
+                                {{ form[item](class_=inputclass) }}
                             {% else %}
                                 {{ form[item](class_=inputclass) }}
                             {% endif %}
@@ -49,7 +87,8 @@
             </div>
         {%- endfor %}
         <div class="form-group submit">
-            {{ form.submit(class_="btn btn-primary") }}
+            {{ form.submit(class_="btn btn-primary btn-sm my-2 me-4") }}
+            <a href="javascript: history.go(-1)" class="btn btn-secondary btn-sm">Cancel</a>
         </div>
     </form>
 {%- endmacro %}
