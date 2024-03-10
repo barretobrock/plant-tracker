@@ -15,6 +15,7 @@ from werkzeug.http import HTTP_STATUS_CODES
 from plant_tracker.config import DevelopmentConfig
 from plant_tracker.core.db import DBAdmin
 from plant_tracker.flask_base import db
+from plant_tracker.routes.altname import bp_altname
 from plant_tracker.routes.family import bp_family
 from plant_tracker.routes.helpers import (
     clear_trailing_slash,
@@ -24,13 +25,16 @@ from plant_tracker.routes.helpers import (
 )
 from plant_tracker.routes.main import bp_main
 from plant_tracker.routes.plants import bp_plant
+from plant_tracker.routes.scheduled_maintenance import bp_schmaint
 from plant_tracker.routes.species import bp_species
 
 
 ROUTES = [
+    bp_altname,
     bp_family,
     bp_main,
     bp_plant,
+    bp_schmaint,
     bp_species
 ]
 
