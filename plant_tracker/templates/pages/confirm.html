@@ -20,7 +20,8 @@
                     </ul>
                 {% endif %}
             </fieldset>
-            {{ form.submit }}
+            {{ form.submit(class_="btn btn-outline-danger btn-sm my-2 me-4") }}
+            <a href="javascript: history.go(-1)" class="btn btn-primary btn-sm">Cancel</a>
         </form>
     </div>
 {% endblock %}
