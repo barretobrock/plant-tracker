@@ -89,14 +89,15 @@ def get_all_families():
         for fm in fams:
             fm_id = fm.plant_family_id
             data_list.append({
-                'id': {'url': url_for('family.get_family', family_id=fm_id), 'name': fm_id},
+                'id': {'url': url_for('family.get_family', family_id=fm_id), 'text': fm_id,
+                       'icon': 'bi-info-circle'},
                 'scientific_name': fm.scientific_name,
                 'common_name': fm.common_name,
                 '': [
                     {'url': url_for('family.edit_family', family_id=fm_id),
-                     'icon': 'bi-pencil', 'icon_class': 'icon edit me-1'},
+                     'icon': 'bi-pencil', 'val_class': 'icon edit me-1'},
                     {'url': url_for('family.delete_family', family_id=fm_id),
-                     'icon': 'bi-trash', 'icon_class': 'icon delete'}
+                     'icon': 'bi-trash', 'val_class': 'icon delete'}
                 ]
             })
     return render_template(

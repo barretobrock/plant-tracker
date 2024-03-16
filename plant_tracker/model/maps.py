@@ -1,16 +1,11 @@
 from dataclasses import dataclass
-from typing import (
-    List,
-    Tuple,
-    Union
-)
+from enum import StrEnum
 
-from geoalchemy2.shape import from_shape
-from shapely import affinity
-from shapely.geometry import Polygon
 from sqlalchemy import (
     VARCHAR,
+    Boolean,
     Column,
+    Enum,
     ForeignKey,
     Integer,
 )
@@ -19,32 +14,29 @@ from sqlalchemy.orm import relationship
 from .base import Base
 
 
+class GeodataType(StrEnum):
+    REGION = 'region'
+    SUB_REGION = 'sub_region'
+    PLANT_POINT = 'plant_point'
+    PLANT_GROUP = 'plant_group'
+    OTHER_POINT = 'other_point'
+    OTHER_POLYGON = 'other_polygon'
+
+
 @dataclass
-class TablePolypoint(Base):
-    """polypoint
+class TableGeodata(Base):
+    """geodata
     In addition to plant points and groups, this can also store boundaries and other spatial references
     """
 
-    polypoint_id: int = Column(Integer, primary_key=True, autoincrement=True)
-    polygon: str = Column(VARCHAR)
-    point: str = Column(VARCHAR)
-    multipoint: str = Column(VARCHAR)
+    geodata_id: int = Column(Integer, primary_key=True, autoincrement=True)
+    geodata_type: str = Column(Enum(GeodataType), nullable=False)
+    name: str = Column(VARCHAR, nullable=False)
+    is_polygon: bool = Column(Boolean, nullable=False)
+    data: str = Column(VARCHAR)
 
     def __repr__(self):
         return self.build_repr_for_class(self)
-
-    @classmethod
-    def process_shape(cls, shape_data: Union[str, List[Union[Tuple[int], Tuple[float], str]]]):
-        if isinstance(shape_data, str):
-            shape_data = shape_data.split(';')
-        if isinstance(shape_data[0], str):
-            shape_data = [tuple(map(int, x.split(','))) for x in shape_data]
-        return from_shape(Polygon(shape_data))
-
-    @classmethod
-    def scale_polygon(cls, polygon, scale_factor: float = 0.2):
-        # Alternatively if scale() doesn't work, try polygon.buffer(<scale_factor>, join_style=2)
-        return affinity.scale(polygon, xfact=scale_factor, yfact=scale_factor)
 
 
 @dataclass
@@ -52,7 +44,8 @@ class TablePlantRegion(Base):
     """plant_region"""
     region_id: int = Column(Integer, primary_key=True, autoincrement=True)
     region_name: str = Column(VARCHAR, nullable=False)
-    polypoint_key: int = Column(ForeignKey(TablePolypoint.polypoint_id, ondelete='SET NULL'))
+    geodata_key: int = Column(ForeignKey(TableGeodata.geodata_id, ondelete='SET NULL'))
+    geodata = relationship('TableGeodata', foreign_keys=[geodata_key], backref='region')
     sub_regions = relationship('TablePlantSubRegion', back_populates='region')
 
     def __repr__(self):
@@ -64,9 +57,25 @@ class TablePlantSubRegion(Base):
     """plant_sub_region"""
     sub_region_id: int = Column(Integer, primary_key=True, autoincrement=True)
     sub_region_name: str = Column(VARCHAR, nullable=False)
-    polypoint_key: int = Column(ForeignKey(TablePolypoint.polypoint_id, ondelete='SET NULL'))
+    geodata_key: int = Column(ForeignKey(TableGeodata.geodata_id, ondelete='SET NULL'))
+    geodata = relationship('TableGeodata', foreign_keys=[geodata_key], backref='sub_region')
     region_key: int = Column(ForeignKey(TablePlantRegion.region_id, ondelete='SET NULL'))
     region = relationship('TablePlantRegion', back_populates='sub_regions')
+    plant_locations = relationship('TablePlantLocation', back_populates='sub_region')
+
+    def __repr__(self):
+        return self.build_repr_for_class(self)
+
+
+@dataclass
+class TablePlantLocation(Base):
+    """plant_location"""
+    plant_location_id: int = Column(Integer, primary_key=True, autoincrement=True)
+    plant_location_name: str = Column(VARCHAR, nullable=False)
+    geodata_key: int = Column(ForeignKey(TableGeodata.geodata_id, ondelete='SET NULL'))
+    geodata = relationship('TableGeodata', foreign_keys=[geodata_key], backref='plant_location')
+    sub_region_key: int = Column(ForeignKey(TablePlantSubRegion.sub_region_id, ondelete='SET NULL'))
+    sub_region = relationship('TablePlantSubRegion', back_populates='plant_locations')
 
     def __repr__(self):
         return self.build_repr_for_class(self)

@@ -11,6 +11,7 @@ from flask import (
 from pathlib import Path
 
 from plant_tracker.core.utils import default_if_prop_none
+from plant_tracker.core.geodata import get_boundaries
 from plant_tracker.forms.add_image import (
     AddImageForm,
     get_image_data_from_form,
@@ -23,7 +24,10 @@ from plant_tracker.forms.add_plant import (
 )
 from plant_tracker.forms.confirm_delete import ConfirmDeleteForm
 from plant_tracker.model import (
+    GeodataType,
+    TableGeodata,
     TablePlant,
+    TablePlantLocation,
     TableSpecies
 )
 from plant_tracker.routes.helpers import (
@@ -74,23 +78,92 @@ def edit_plant(plant_id: int = None):
                 'pages/plant/add-plant.html',
                 form=form,
                 is_edit=True,
+                boundaries=get_boundaries(session=session),
                 post_endpoint_url=url_for(request.endpoint, plant_id=plant_id)
             )
         elif request.method == 'POST':
             plant = get_plant_data_from_form(session=session, form_data=request.form, plant_id=plant_id)
+            if form['geodata'].data:
+                loc_name = f'{plant.species.common_name}#{plant_id}'
+                is_polygon = request.form["shape_type"] == 'polygon'
+                gtype = GeodataType(f'plant_{request.form["shape_type"]}')
+                gdata = request.form['geodata']
+                if plant.plant_location and plant.plant_location.geodata_key:
+                    # Existing data
+                    if gdata != plant.plant_location.geodata.data:
+                        # Update shape data
+                        plant.plant_location.geodata.data = gdata
+                    if gtype != plant.plant_location.geodata.geodata_type:
+                        # Log change in shape
+                        plant.plant_location.geodata.geodata_type = gtype
+                        plant.plant_location.geodata.is_polygon = is_polygon
+                else:
+                    # Create new plant location
+                    plant.plant_location = TablePlantLocation(
+                        plant_location_name=loc_name,
+                    )
+                    plant.plant_location.geodata = TableGeodata(
+                        geodata_type=gtype,
+                        name=loc_name,
+                        is_polygon=is_polygon,
+                        data=gdata
+                    )
             session.add(plant)
             flash(f'Plant {plant.species.scientific_name} ({plant.plant_id}) successfully updated', 'success')
             return redirect(url_for('plant.get_all_plants'))
 
 
-@bp_plant.route('/api/<int:plant_id>', methods=['GET'])
 @bp_plant.route('/<int:plant_id>', methods=['GET'])
 def get_plant(plant_id: int):
     with get_app_eng().session_mgr() as session:
+        plant: TablePlant
         plant = session.query(TablePlant).filter(TablePlant.plant_id == plant_id).one_or_none()
-        if '/api/' in request.path:
-            return jsonify(plant), 200
-        return render_template('pages/plant/plant-info.html', data=plant)
+        if plant.plant_location:
+            map_info = {
+                'data': default_if_prop_none(plant, 'plant_location.geodata.data'),
+                'shape_type': 'polygon' if default_if_prop_none(plant, 'plant_location.geodata.is_polygon') else 'point',
+                'boundaries': get_boundaries(session=session),
+                'focus_color': 'green'
+            }
+        else:
+            map_info = None
+        return render_template(
+            'pages/plant/plant-info.html',
+            data=plant,
+            observation_info={
+                'headers': ['Type', 'Rating', 'Height mm', 'Width mm', 'Date', 'Notes'],
+                'rowdata': [
+                    [
+                        x.observation_type,
+                        default_if_prop_none(x, 'plant_rating'),
+                        default_if_prop_none(x, 'plant_height_mm'),
+                        default_if_prop_none(x, 'plant_width_mm'),
+                        x.observation_date.strftime('%F'),
+                        x.notes
+                    ] for x in plant.observation_logs
+                ]
+            },
+            maintenance_info={
+                'headers': ['Type', 'Date', 'Notes'],
+                'rowdata': [
+                    [
+                        x.maintenance_type,
+                        x.maintenance_date.strftime('%F'),
+                        x.notes
+                    ] for x in plant.maintenance_logs
+                ]
+            },
+            watering_info={
+                'headers': ['Date', 'Notes'],
+                'rowdata': [
+                    [
+                        x.watering_date.strftime('%F'),
+                        x.notes
+                    ] for x in plant.watering_logs
+                ]
+            },
+            map_info=map_info
+        )
 
 
 @bp_plant.route('/api/all', methods=['GET'])
@@ -108,21 +181,21 @@ def get_all_plants(species_id: int = None):
         pt: TablePlant
         for pt in plants:
             pt_id = pt.plant_id
-            data_list.append({
-                'id': {'url': url_for('plant.get_plant', plant_id=pt_id), 'text': pt_id,
-                       'icon': 'bi-info-circle'},
-                'scientific_name': pt.species.scientific_name,
-                'common_name': pt.species.common_name,
-                'plant_source': default_if_prop_none(pt, 'plant_source'),
-                'region': default_if_prop_none(pt, 'region.region_name'),
-                'subregion': default_if_prop_none(pt, 'sub_region.sub_region_name'),
-                '': [
+            data_list.append([
+                {'url': url_for('plant.get_plant', plant_id=pt_id), 'text': pt_id,
+                 'icon': 'bi-info-circle'},
+                pt.species.scientific_name,
+                pt.species.common_name,
+                default_if_prop_none(pt, 'plant_source'),
+                default_if_prop_none(pt, 'region.region_name'),
+                default_if_prop_none(pt, 'sub_region.sub_region_name'),
+                [
                     {'url': url_for('plant.edit_plant', plant_id=pt_id),
                      'icon': 'bi-pencil', 'val_class': 'icon edit me-1'},
                     {'url': url_for('plant.delete_plant', plant_id=pt_id),
                      'icon': 'bi-trash', 'val_class': 'icon delete'}
                 ]
-            })
+            ])
     return render_template(
         'pages/plant/list-plants.html',
         order_list=[1, 'asc'],

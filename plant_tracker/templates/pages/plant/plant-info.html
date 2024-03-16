@@ -1,10 +1,140 @@
+{% import 'macros/table_builder.html' as f %}
+{% import 'macros/svg.html' as s %}
 {% extends 'base.html' %}
 {% block head %}
     {{ super() }}
 {% endblock %}
 {% block content %}
-    <h2>Plant Info:</h2>
-    <div>
-        {{data.species.scientific_name}} ({{data.species.common_name}})
+    <div class="row">
+        <div class="row title-block">
+            <div class="col">
+                <div class="species-title">
+                    {{data.species.scientific_name}} #{{ data.plant_id }}
+                    {% if data.species.is_native is none %}
+                        {% set native_text = "native?" %}
+                        {% set native_color = "warning" %}
+                    {% elif data.species.is_native %}
+                        {% set native_text = "native" %}
+                        {% set native_color = "success" %}
+                    {% else %}
+                        {% set native_text = "not native" %}
+                        {% set native_color = "danger" %}
+                    {% endif %}
+                    <span class="species-badge badge rounded-pill bg-{{ native_color }}">{{ native_text }}</span>
+                </div>
+                <div class="species-subtitle">({{data.species.common_name}})</div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col my-2">
+            <div class="float-end">
+                <a type="button" class="btn btn-outline-warning btn-sm" href="#"><i class="bi-wrench"> Maintenance</i></a>
+                <a type="button" class="btn btn-outline-primary btn-sm" href="/plant/{{ data.plant_id }}/edit"><i class="bi-pencil"></i> Edit</a>
+                <a type="button" class="btn btn-outline-danger btn-sm" href="/plant/{{ data.plant_id }}/delete"><i class="bi-trash"></i> Delete</a>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <div class="card-body shadow p-3 mb-5 rounded">
+                <h4 class="card-title">Basic Info</h4>
+                <div class="card-text">
+                    <div class="info-line"><strong>Source: </strong>{{ data.plant_source }}</div>
+                    <div class="info-line"><strong>Date Planted: </strong>{{ data.date_planted }} In-ground Age: </div>
+                    <div class="info-line"><strong>Drip Irrigated: </strong>{{ data.is_drip_irrigated }}</div>
+                    <div class="info-line"><strong>In Container: </strong>{{ data.is_in_container }}</div>
+                </div>
+                <hr>
+                <h5 class="card-title">?</h5>
+                <div class="card-text">
+
+                </div>
+
+            </div>
+        </div>
+        <div class="col">
+            <div class="card-body shadow p-3 mb-5 rounded">
+                <h4 class="card-title">
+                    Plant Photos
+                    <span class="float-end">
+                        <a type="button" href="/plant/{{data.plant_id}}/image/add" class="btn btn-outline-success btn-sm"><i class="bi-plus-circle-fill"></i></a>
+                    </span>
+                </h4>
+                <div id="plant-pic-carousel" class="carousel slide" data-bs-slide="carousel">
+                    <div class="carousel-inner">
+                        {% if data.images %}
+                            {% for img in data.images %}
+                                <div class="carousel-item active">
+                                    <img src="{{ img.image_path }}" class="d-block w-100" alt="plant-pic">
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="carousel-item active">
+                                <img src="/images/winecup.jpg" class="d-block w-100" alt="plant-pic">
+                            </div>
+                        {% endif %}
+                    </div>
+                    <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Previous</span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Next</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <div class="card-body shadow p-3 mb-5 rounded">
+                <h4 class="card-title">
+                    Observations
+                    <span class="float-end">
+                        <a type="button" href="/plant/{{data.plant_id}}/observation/add" class="btn btn-outline-success btn-sm"><i class="bi-plus-circle-fill"></i></a>
+                    </span>
+                </h4>
+                {{ f.simple_table('waALadKJes', observation_info.headers, observation_info.rowdata) }}
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <div class="card-body shadow p-3 mb-5 rounded">
+                <h4 class="card-title">
+                    Logged Maintenance
+                    <span class="float-end">
+                        <a type="button" href="/plant/{{data.plant_id}}/maintenance/add" class="btn btn-outline-success btn-sm"><i class="bi-plus-circle-fill"></i></a>
+                    </span>
+                </h4>
+                {{ f.simple_table('waALadKAlkeAJes', maintenance_info.headers, maintenance_info.rowdata) }}
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <div class="card-body shadow p-3 mb-5 rounded">
+                <h4 class="card-title">
+                    Watering Logs
+                    <span class="float-end">
+                        <a type="button" href="/plant/{{data.plant_id}}/watering/add" class="btn btn-outline-success btn-sm"><i class="bi-plus-circle-fill"></i></a>
+                    </span>
+                </h4>
+                {{ f.simple_table('waALadKAlkeAJes', watering_info.headers, watering_info.rowdata) }}
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            {% if map_info %}
+                {% call s.render_map(map_info.data, map_info.boundaries, map_info.focus_color, none, map_info.shape_type) %}
+
+                {% endcall %}
+            {% else %}
+                <div class="card-body">No map data!</div>
+            {% endif %}
+        </div>
     </div>
 {% endblock %}

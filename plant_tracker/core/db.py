@@ -1,6 +1,5 @@
 from contextlib import contextmanager
 from typing import (
-    Any,
     List,
     Optional
 )
@@ -12,15 +11,16 @@ from plant_tracker.config import DevelopmentConfig, ProductionConfig
 from plant_tracker.model import (
     Base,
     TableAlternateNames,
+    TableGeodata,
     TableImage,
     TableMaintenanceLog,
     TableObservationLog,
     TablePlant,
     TablePlantFamily,
     TablePlantHabit,
+    TablePlantLocation,
     TablePlantRegion,
     TablePlantSubRegion,
-    TablePolypoint,
     TableScheduledMaintenanceLog,
     TableScheduledWateringLog,
     TableSpecies,
@@ -32,15 +32,16 @@ class DBAdmin:
     """For holding all the various ETL processes, delimited by table name or function of data stored"""
     TABLES = [
         TableAlternateNames,
+        TableGeodata,
         TableImage,
         TableMaintenanceLog,
         TableObservationLog,
         TablePlant,
         TablePlantFamily,
         TablePlantHabit,
+        TablePlantLocation,
         TablePlantRegion,
         TablePlantSubRegion,
-        TablePolypoint,
         TableScheduledMaintenanceLog,
         TableScheduledWateringLog,
         TableSpecies,
@@ -86,31 +87,38 @@ class DBAdmin:
 
     def refresh_table_objects(self, tbl_objs: List, session: Session = None):
         new_objs = []
-        for obj in tbl_objs:
-            new_objs.append(self.refresh_table_object(tbl_obj=obj, session=session))
+        if session is None:
+            with self.session_mgr() as session:
+                for obj in tbl_objs:
+                    new_objs.append(self.refresh_table_object(tbl_obj=obj, session=session))
+        else:
+            for obj in tbl_objs:
+                new_objs.append(self.refresh_table_object(tbl_obj=obj, session=session))
         return new_objs
+
+    @staticmethod
+    def commit_and_refresh_table_obj(session, table_obj, do_expunge: bool = False):
+        # Bind to session
+        session.add(table_obj)
+        # Prime, pull down changes
+        session.commit()
+        # Populate changes to obj
+        session.refresh(table_obj)
+        if do_expunge:
+            # Remove obj from session
+            session.expunge(table_obj)
+        return table_obj
 
     def refresh_table_object(self, tbl_obj, session: Session = None):
         """Refreshes a table object by adding it to the session, committing and refreshing it before
         removing it from the session"""
 
-        def _refresh(sess: Session, tbl) -> Any:
-            # Bind to session
-            sess.add(tbl)
-            # Prime, pull down changes
-            sess.commit()
-            # Populate changes to obj
-            sess.refresh(tbl)
-            # Remove obj from session
-            sess.expunge(tbl)
-            return tbl
-
         if session is None:
             with self.session_mgr() as session:
-                tbl_obj = _refresh(sess=session, tbl=tbl_obj)
+                tbl_obj = self.commit_and_refresh_table_obj(session=session, table_obj=tbl_obj, do_expunge=True)
         else:
             # Working in an existing session
-            tbl_obj = _refresh(sess=session, tbl=tbl_obj)
+            tbl_obj = self.commit_and_refresh_table_obj(session=session, table_obj=tbl_obj, do_expunge=True)
         return tbl_obj
 
     def get_family_by_id(self, family_id: int = None) -> Optional[TablePlantFamily]:

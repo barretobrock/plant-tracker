@@ -9,6 +9,7 @@ from typing import (
 
 from wtforms import (
     Form,
+    HiddenField,
     StringField
 )
 
@@ -20,6 +21,10 @@ bool_with_unknown_list = ['unknown', 'yes', 'no']
 class DataListField(StringField):
     # This should be overridden on population
     datalist_entries = []
+
+
+class ImagePasteField(HiddenField):
+    pass
 
 
 def list_with_default(obj: Union[List[str], Type[StrEnum], Iterable], default: str = '') -> List[str]:

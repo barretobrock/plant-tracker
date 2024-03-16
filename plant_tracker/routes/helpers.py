@@ -10,12 +10,14 @@ from flask import (
 )
 from pukr import PukrLog
 
+from plant_tracker.core.db import DBAdmin
+
 
 def get_db_conn():
     return current_app.config['db']
 
 
-def get_app_eng():
+def get_app_eng() -> DBAdmin:
     return current_app.extensions['eng']
 
 

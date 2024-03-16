@@ -77,7 +77,7 @@ class TableObservationLog(Base):
     plant_rating: int = Column(Integer)
     plant_height_mm: int = Column(Integer)
     plant_width_mm: int = Column(Integer)
-    observation_type = Column(Enum(ObservationType), nullable=False)
+    observation_type: str = Column(Enum(ObservationType), nullable=False)
     observation_date: datetime.date = Column(Date, nullable=False, default=datetime.date.today())
     notes: str = Column(VARCHAR)
 
@@ -96,8 +96,8 @@ class TableScheduledMaintenanceLog(Base):
     species_key: int = Column(ForeignKey(TableSpecies.species_id, ondelete='CASCADE'), nullable=False)
     species = relationship(TableSpecies, back_populates='scheduled_maintenance_logs')
     is_enabled: bool = Column(Boolean, default=False)
-    maintenance_type = Column(Enum(MaintenanceType), nullable=False)
-    maintenance_frequency = Column(Enum(ScheduledMaintenanceFrequencyType), nullable=False,
+    maintenance_type: str = Column(Enum(MaintenanceType), nullable=False)
+    maintenance_frequency: str = Column(Enum(ScheduledMaintenanceFrequencyType), nullable=False,
                                    default=ScheduledMaintenanceFrequencyType.ANNUAL)
     maintenance_period_start: datetime.date = Column(Date, nullable=False)
     maintenance_period_end: datetime.date = Column(Date, nullable=False)

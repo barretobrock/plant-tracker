@@ -4,7 +4,7 @@
     {{ super() }}
 {% endblock %}
 {% block content %}
-    {% call f.render_table(table_id, headers, data_rows, order_list) %}
+    {% call f.sortable_table(table_id, headers, data_rows, order_list) %}
         Plant Families
     {% endcall %}
 {% endblock %}

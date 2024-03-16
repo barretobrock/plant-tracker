@@ -30,6 +30,10 @@
                                 {% set inputclass = inputclass ~ " form-check-input" %}
                             {% elif form[item].type == 'SelectField' %}
                                 {% set inputclass = inputclass ~ " form-select" %}
+                            {% elif form[item].type == 'TextAreaField' %}
+                                {% set inputclass = inputclass ~ " form-textarea" %}
+                            {% elif form[item].type == 'RadioField' %}
+                                {% set inputclass = inputclass ~ " form-radio" %}
                             {% endif %}
 
                             <!--Here we instantiate the field item-->
@@ -40,7 +44,7 @@
                                         <option value="{{ entry }}">
                                     {% endfor %}
                                 </datalist>
-                            {% elif form[item].type == 'HiddenField' %}
+                            {% elif form[item].type == 'ImagePasteField' %}
                                 <script>
                                     document.onpaste = function (event) {
                                         var items = (event.clipboardData || event.originalEvent.clipboardData).items;

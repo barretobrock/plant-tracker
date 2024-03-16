@@ -1,35 +1,32 @@
+{% import 'macros/table_builder.html' as f %}
+{% import 'macros/svg.html' as s %}
 {% extends 'base.html' %}
 {% block head %}
     {{ super() }}
 {% endblock %}
 {% block content %}
-    {% set waterreq_class = "waterreq" %}
-
     <div class="row">
-        <div>
-            <div class="row title-block">
-                <div class="col">
-                    <div class="species-title">
-                        {{data.scientific_name}}
-                        {% if data.is_native is none %}
-                            {% set native_text = "native?" %}
-                            {% set native_color = "warning" %}
-                        {% elif data.is_native %}
-                            {% set native_text = "native" %}
-                            {% set native_color = "success" %}
-                        {% else %}
-                            {% set native_text = "not native" %}
-                            {% set native_color = "danger" %}
-                        {% endif %}
-                        <span class="species-badge badge rounded-pill bg-{{ native_color }}">{{ native_text }}</span>
-                        {% for item_name, item_dict in icon_class_map.items() %}
-                            <i class="icon {{ item_dict.map[item_dict.value] }} {{ item_dict.addl_class}}" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ item_name }} - {{ item_dict.value }}"></i>
-                        {% endfor %}
-                    </div>
-                    <div class="species-subtitle">({{data.common_name}})</div>
+        <div class="row title-block">
+            <div class="col">
+                <div class="species-title">
+                    {{data.scientific_name}}
+                    {% if data.is_native is none %}
+                        {% set native_text = "native?" %}
+                        {% set native_color = "warning" %}
+                    {% elif data.is_native %}
+                        {% set native_text = "native" %}
+                        {% set native_color = "success" %}
+                    {% else %}
+                        {% set native_text = "not native" %}
+                        {% set native_color = "danger" %}
+                    {% endif %}
+                    <span class="species-badge badge rounded-pill bg-{{ native_color }}">{{ native_text }}</span>
+                    {% for item_name, item_dict in icon_class_map.items() %}
+                        <i class="icon {{ item_dict.map[item_dict.value] }} {{ item_dict.addl_class}}" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ item_name }} - {{ item_dict.value }}"></i>
+                    {% endfor %}
                 </div>
+                <div class="species-subtitle">({{data.common_name}})</div>
             </div>
-
         </div>
     </div>
     <div class="row">
@@ -54,9 +51,6 @@
         <div class="col">
             <div class="card-body shadow p-3 mb-5 rounded">
                 <h4 class="card-title">Basic Info</h4>
-                <p class="card-text">
-                    <span></span>
-                </p>
                 <div class="card-text">
                 {% for item_label, item_dict in basic_info.items() %}
                     <div class="info-line">
@@ -153,31 +147,7 @@
                         <a type="button" href="/species/{{data.species_id}}/scheduled_maintenance/add" class="btn btn-outline-success btn-sm"><i class="bi-plus-circle-fill"></i></a>
                     </span>
                 </h4>
-                 <table class="table table-sm table-bordered table-striped table-dark">
-                     <thead>
-                        <tr>
-                            <th>Type</th>
-                            <th>Freq</th>
-                            <th>Start</th>
-                            <th>End</th>
-                            <th>Notes</th>
-                            <th></th>
-                        </tr>
-                     </thead>
-                     {% for maint in data.scheduled_maintenance_logs %}
-                        <tr class="{{ '' if maint.is_enabled else 'disabled' }}">
-                            <td>{{ maint.maintenance_type }}</td>
-                            <td>{{ maint.maintenance_frequency }}</td>
-                            <td>{{ maint.maintenance_period_start.strftime("%b %d") }}</td>
-                            <td>{{ maint.maintenance_period_end.strftime("%b %d") }}</td>
-                            <td>{{ maint.notes }}</td>
-                            <td>
-                                <a type="button" class="btn btn-outline-primary btn-sm inline-button"  href="/species/{{ data.species_id }}/scheduled_maintenance/{{ maint.maintenance_schedule_id }}/edit" ><i class="bi-pencil"></i></a>
-                                <a type="button" class="btn btn-outline-danger btn-sm inline-button"  href="/species/{{ data.species_id }}/scheduled_maintenance/{{ maint.maintenance_schedule_id }}/delete" ><i class="bi-trash"></i></a>
-                            </td>
-                        </tr>
-                     {% endfor %}
-                 </table>
+                {{ f.simple_table('waALKJes', scheduled_maint_info.headers, scheduled_maint_info.rowdata) }}
             </div>
         </div>
     </div>
@@ -185,22 +155,26 @@
         <div class="col">
             <div class="card-body shadow p-3 mb-5 rounded">
                 <h4 class="card-title">Additional Info</h4>
-                <p class="card-text">
-                    {% for item_label, item_dict in addl_info.items() %}
-                        <span><strong>{{ item_label }}: </strong></span>
-                        <span>{{ item_dict.value }}</span>
-                    {% endfor %}
-                </p>
-
+                {% if data.care_notes %}
+                    <h5>Care Notes</h5>
+                    <p class="card-text">{{ data.care_notes }}</p>
+                {% endif %}
+                {% if data.propagation_notes %}
+                    <h5>Propagation Notes</h5>
+                    <p class="card-text">{{ data.propagation_notes }}</p>
+                {% endif %}
             </div>
         </div>
     </div>
     <div class="row">
         <div class="col">
-            <div class="card-body shadow p-3 mb-5 rounded">
-                <h4 class="card-title">Map</h4>
-                <svg></svg>
-            </div>
+            {% if map_info %}
+                {% call s.render_map(map_info.data, map_info.boundaries, map_info.focus_color, none, map_info.shape_type) %}
+
+                {% endcall %}
+            {% else %}
+                <div class="card-body">No map data!</div>
+            {% endif %}
         </div>
     </div>
 {% endblock %}

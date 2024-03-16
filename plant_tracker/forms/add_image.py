@@ -16,6 +16,7 @@ from wtforms.validators import DataRequired
 
 from plant_tracker.model import TableImage
 from plant_tracker.forms.helper import (
+    ImagePasteField,
     apply_field_data_to_form,
     extract_form_data_to_obj,
     populate_form
@@ -31,7 +32,7 @@ image_attr_map = {
 class AddImageForm(FlaskForm):
     """Add image form"""
 
-    image_data_url = HiddenField('Image Paste Detection')
+    image_data_url = ImagePasteField('Image Paste Detection')
     image_path = MultipleFileField(label='Upload Image(s)')
 
     submit = SubmitField('Submit')

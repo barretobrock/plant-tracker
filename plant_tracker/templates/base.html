@@ -52,7 +52,12 @@
                         'Plants': {
                             'Plants List': 'plant.get_all_plants',
                         },
-
+                        'Map': {
+                            '+ Other Point': {'path': 'geodata.add_geodata', 'geo_type': 'other_point'},
+                            '+ Other Group': {'path': 'geodata.add_geodata', 'geo_type': 'other_polygon'},
+                            '+ SubRegion': {'path': 'geodata.add_geodata', 'geo_type': 'sub_region'},
+                            '+ Region': {'path': 'geodata.add_geodata', 'geo_type': 'region'}
+                        }
                     } -%}
 
                     {% set nav_right = {
@@ -73,7 +78,12 @@
                                     <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">{{ name }}</a>
                                     <div class="dropdown-menu">
                                         {% for item_name, item_path in details.items() %}
-                                            <a class="dropdown-item bs-dark" href="{{ url_for(item_path) }}">{{ item_name }}</a>
+                                            {% if item_path is mapping %}
+                                                {% set ipath = item_path.pop('path') %}
+                                                <a class="dropdown-item bs-dark" href="{{ url_for(ipath, **item_path) }}">{{ item_name }}</a>
+                                            {% else %}
+                                                <a class="dropdown-item bs-dark" href="{{ url_for(item_path) }}">{{ item_name }}</a>
+                                            {% endif %}
                                         {% endfor %}
                                     </div>
                                 </li>

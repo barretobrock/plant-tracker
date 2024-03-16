@@ -1,4 +1,55 @@
-{% macro render_table(table_id, headers, data_rows, order_list) -%}
+{% macro simple_table(table_id, header_list, data_rows) -%}
+    <table class="table table-sm table-bordered table-striped table-dark" id="{{ table_id }}">
+        <thead>
+            <tr>
+                {% for hdr in header_list %}
+                    <th>{{ hdr }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for rowlist in data_rows %}
+                <tr>
+                    {% for item in rowlist %}
+                        {% if item is string %}
+                            <td class="f-smol">{{ item if item is not none else '' }}</td>
+                        {% elif item|int != 0 %}
+                             <td class="f-smol">{{ item if item is not none else '' }}</td>
+                        {% elif item is mapping %}
+                            {% set item = [item] %}
+                        {% elif item is not iterable %}
+                            <td></td>
+                        {% endif %}
+
+                        {% if item is iterable and item is not string %}
+                            <td>
+                                {% for val in item %}
+                                    {% set val_class = val.val_class if val.val_class else ""  %}
+                                    {% set icon = val.icon if val.icon else ""  %}
+                                    {% set text = val.text if val.text is not none else ""  %}
+
+                                    {% if val.url %}
+                                        <a href="{{ val.url }}" target="{{ '_blank' if val.url.startswith('http') else '_parent' }}">
+                                            <i class="{{ val_class }} {{ icon }} float-start">
+
+                                            </i>
+                                            <span class="float-end">{{ text }}</span>
+                                        </a>
+                                    {% elif val.icon %}
+                                        <i class="{{ val_class }} {{ icon }}">{{ text }}</i>
+                                    {% else %}
+                                        <span class="{{ val_class }}">{{ text }}</span>
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
+                        {% endif %}
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{%- endmacro %}
+{% macro sortable_table(table_id, headers, data_rows, order_list) -%}
 
     {% if not order_list %}
         {% set order_list = [0, "asc"] %}
@@ -40,51 +91,6 @@
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/table.css') }}">
     <div class="mt-5 mb-5">
         <h3>{{ caller() }}</h3>
-        <div>
-            <table class="table table-sm table-bordered table-striped table-dark" id="{{ table_id }}">
-                <thead>
-                    <tr>
-                        {% for hdr in headers %}
-                            <th>{{ hdr }}</th>
-                        {% endfor %}
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for d in data_rows %}
-                        <tr>
-                            {% for item_name, value in d.items() %}
-                                <td class="{{ 'icon-cell' if value.icon else '' }}">
-                                    {% if value is mapping %}
-                                        {% set value = [value] %}
-                                    {% endif %}
-
-                                    {% if value is iterable and value is not string %}
-                                        {% for val in value %}
-                                            {% set val_class = val.val_class if val.val_class else ""  %}
-                                            {% set icon = val.icon if val.icon else ""  %}
-                                            {% set text = val.text if val.text is not none else ""  %}
-
-                                            {% if val.url %}
-                                                <a href="{{ val.url }}" target="{{ '_blank' if val.url.startswith('http') else '_parent' }}">
-                                                    <i class="{{ val_class }} {{ icon }}">
-                                                        {{ text }}
-                                                    </i>
-                                                </a>
-                                            {% elif val.icon %}
-                                                <i class="{{ val_class }} {{ icon }}">{{ text }}</i>
-                                            {% else %}
-                                                <span class="{{ val_class }}">{{ text }}</span>
-                                            {% endif %}
-                                        {% endfor %}
-                                    {% else %}
-                                        {{ value if value is not none else '' }}
-                                    {% endif %}
-                                </td>
-                            {% endfor %}
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+        <div>{{ simple_table(table_id, headers, data_rows) }}</div>
     </div>
 {%- endmacro %}

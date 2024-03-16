@@ -24,18 +24,26 @@ from plant_tracker.routes.helpers import (
     log_before,
 )
 from plant_tracker.routes.main import bp_main
+from plant_tracker.routes.maintenance import bp_maint
+from plant_tracker.routes.observation import bp_obs
 from plant_tracker.routes.plants import bp_plant
+from plant_tracker.routes.geodata import bp_geodata
 from plant_tracker.routes.scheduled_maintenance import bp_schmaint
 from plant_tracker.routes.species import bp_species
+from plant_tracker.routes.watering import bp_watering
 
 
 ROUTES = [
     bp_altname,
     bp_family,
     bp_main,
+    bp_maint,
+    bp_obs,
     bp_plant,
+    bp_geodata,
     bp_schmaint,
-    bp_species
+    bp_species,
+    bp_watering
 ]
 
 

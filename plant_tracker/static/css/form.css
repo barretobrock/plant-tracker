@@ -8,6 +8,20 @@
     color: var(--txt-green);
 }
 
+.form-textarea,
+.form-radio {
+    height: 150px !important;
+}
+
+ul.form-radio {
+    list-style-type: none;
+}
+
+input:disabled,
+select:disabled {
+    color: var(--txt-light);
+}
+
 .img-preview img {
     height: 200px;
 }

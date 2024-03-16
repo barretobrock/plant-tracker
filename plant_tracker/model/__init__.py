@@ -11,9 +11,11 @@ from .logs import (
     TableWateringLog
 )
 from .maps import (
+    GeodataType,
+    TableGeodata,
+    TablePlantLocation,
     TablePlantRegion,
     TablePlantSubRegion,
-    TablePolypoint
 )
 from .plant import (
     PlantSourceType,

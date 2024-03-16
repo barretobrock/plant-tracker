@@ -5,17 +5,19 @@ from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
 from wtforms import (
     DateField,
-    IntegerField,
     SelectField,
     StringField,
     SubmitField,
+    TextAreaField
 )
 from wtforms.validators import DataRequired
 
 from plant_tracker.model import (
+    GeodataType,
     PlantSourceType,
+    TableGeodata,
     TablePlant,
-    TablePolypoint,
+    TablePlantLocation,
     TableSpecies
 )
 from plant_tracker.forms.helper import (
@@ -47,7 +49,7 @@ plant_attr_map = {
         'tbl_key': 'is_in_container',
         'empty_var': 'unknown',
         'choices': bool_with_unknown_list
-    }
+    },
 }
 
 
@@ -74,14 +76,8 @@ class AddPlantForm(FlaskForm):
     is_drip_irrigated = SelectField(label='Drip Irrigated?', choices=bool_with_unknown_list, default='unknown')
     is_in_container = SelectField(label='In Container?', choices=bool_with_unknown_list, default='unknown')
 
-    planting_loc_x = IntegerField(
-        label='Planting Location X'
-    )
-    planting_loc_y = IntegerField(
-        label='Planting Location Y'
-    )
-    planting_loc_polygon = StringField(label='Planting Location as polygon',
-                                       description='x,y pairs, semicolon delimited (e.g., 3,4;3,5;0,5;3,4)')
+    shape_type = SelectField(label='Shape Type', choices=['polygon', 'point'], default='point')
+    geodata = TextAreaField(label='GeoData')
 
     submit = SubmitField('Submit')
 
@@ -103,6 +99,9 @@ def populate_plant_form(session, form: AddPlantForm, plant_id: int = None) -> Ad
         form_field_map = apply_field_data_to_form(plant, plant_attr_map)
 
         # Any cleanup of data should happen here
+        if plant.plant_location:
+            form['geodata'].data = plant.plant_location.geodata.data
+            form['shape_type'].data = 'polygon' if plant.plant_location.geodata.is_polygon else 'point'
 
         form = populate_form(form, form_field_map)
     return form
@@ -122,18 +121,4 @@ def get_plant_data_from_form(session, form_data, plant_id: int = None) -> TableP
 
     plant = extract_form_data_to_obj(form_data=form_data, table_obj=plant,
                                      obj_attr_map=plant_attr_map, session=session)
-
-    polypoint_obj = None
-    # Handle x,y coordinate region determination
-    if (point_x := form_data.get('planting_loc_x')) and (point_y := form_data.get('planting_loc_y')):
-        polypoint_obj = TablePolypoint(point=f'{point_x},{point_y}')
-    elif polygon := form_data.get('polygon_loc'):
-        polypoint_obj = TablePolypoint(polygon=polygon)
-
-    if polypoint_obj:
-        session.add(polypoint_obj)
-        session.commit()
-        session.refresh(polypoint_obj)
-        plant.polypoint_key = polypoint_obj.polypoint_id
-
     return plant

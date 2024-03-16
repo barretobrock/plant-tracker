@@ -70,8 +70,10 @@ a.nav-link.active {
     color: var(--txt-red);
 }
 
-input:disabled {
-    color: var(--txt-light);
+#coords-div {
+    position: fixed;
+    top: 4em;
+    right: 1em;
 }
 
 /* Icons */

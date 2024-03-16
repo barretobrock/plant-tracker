@@ -9,13 +9,3 @@ def default_if_prop_none(obj, prop_name: str, default: str = '') -> str:
         else:
             return default_if_prop_none(sub_obj, prop_name_split[1])
     return default if getattr(obj, prop_name) is None else getattr(obj, prop_name)
-
-
-def commit_and_refresh_table_obj(session, table_obj):
-    session.add(table_obj)
-    session.commit()
-    session.refresh(table_obj)
-    return table_obj
-
-
-

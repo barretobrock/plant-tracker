@@ -10,30 +10,13 @@ from flask import (
     url_for
 )
 from pathlib import Path
-from typing import (
-    Dict,
-    List,
-    Union
-)
-
-from werkzeug.utils import secure_filename
-from wtforms import Form
 
 from plant_tracker.core.utils import default_if_prop_none
-from plant_tracker.forms.add_name import (
-    AddNameForm,
-    get_name_data_from_form,
-    populate_name_form
-)
+from plant_tracker.core.geodata import get_boundaries
 from plant_tracker.forms.add_image import (
     AddImageForm,
     get_image_data_from_form,
     populate_image_form
-)
-from plant_tracker.forms.add_scheduled_maintenance import (
-    AddScheduledMaintenanceForm,
-    get_scheduled_maintenance_data_from_form,
-    populate_scheduled_maintenance_form
 )
 from plant_tracker.forms.add_species import (
     AddSpeciesForm,
@@ -163,17 +146,52 @@ def get_species(species_id: int):
             'Family': {'value': fam_text},
             'Habit': {'value': default_if_prop_none(species, 'habit.plant_habit', '?')},
             'Duration': {'value': default_if_prop_none(species, 'duration', '?')},
+            'Drought Tolerant':  {'value': default_if_prop_none(species, 'is_drought_tolerant', '?')},
+            'Heat Tolerant': {'value': default_if_prop_none(species, 'is_heat_tolerant', '?')},
+            'Freeze Tolerant': {'value': default_if_prop_none(species, 'is_freeze_tolerant', '?')}
         }
-        addl_info = {
+        scheduled_maint_info = {
+            'headers': ["Type", "Freq", "Start", "End", "Notes", ""],
+            'rowdata': [
+                [
+                    x.maintenance_type,
+                    x.maintenance_frequency,
+                    x.maintenance_period_start.strftime("%b %d"),
+                    x.maintenance_period_end.strftime("%b %d"),
+                    x.notes,
+                    [
+                        {'url': url_for('scheduled_maintenance.edit_scheduled_maintenance', species_id=species_id,
+                                        maintenance_schedule_id=x.maintenance_schedule_id),
+                         'icon': 'bi-pencil', 'val_class': 'icon edit me-1'},
+                        {'url': url_for('scheduled_maintenance.delete_scheduled_maintenance',
+                                        species_id=species_id,
+                                        maintenance_schedule_id=x.maintenance_schedule_id),
+                         'icon': 'bi-trash', 'val_class': 'icon delete me-1'},
+                    ]
+                ] for x in species.scheduled_maintenance_logs]
+        }
 
+        map_info = {
+            'data_points': [],
+            'boundaries': get_boundaries(session=session),
+            'focus_color': 'green'
         }
+        for plant in species.plants:
+            if plant.plant_location:
+                map_info['data_points'].append({
+                    'type': plant.plant_location.geodata.geodata_type,
+                    'data': plant.plant_location.geodata.data,
+                    'name': plant.plant_location.name,
+                    'color': 'green'
+                })
 
         return render_template(
             'pages/species/species-info.html',
             data=species,
             icon_class_map=icon_class_map,
             basic_info=basic_info,
-            addl_info=addl_info,
+            scheduled_maint_info=scheduled_maint_info,
+            map_data=map_info
         )
 
 
@@ -197,25 +215,25 @@ def get_all_species():
                 native_icon = 'check'
             else:
                 native_icon = 'x'
-            data_list.append({
-                'id': {'url': url_for('species.get_species', species_id=sp_id), 'text': sp_id,
-                       'icon': 'bi-info-circle'},
-                'genus': sp.genus,
-                'species': sp.species,
-                'common_name': sp.common_name,
-                'family': fam_name,
-                'is_native': {'icon': f'bi-{native_icon}', 'val_class': 'icon bool'},
-                'usda_symbol': {'url': wf_link, 'text': sp.usda_symbol},
-                'n_plants': {'text': len(sp.plants), 'val_class': 'zero' if len(sp.plants) == 0 else ''},
-                '': [
+            data_list.append([
+                {'url': url_for('species.get_species', species_id=sp_id), 'text': sp_id,
+                 'icon': 'bi-info-circle'},
+                sp.genus,
+                sp.species,
+                sp.common_name,
+                fam_name,
+                {'icon': f'bi-{native_icon}', 'val_class': 'icon bool'},
+                {'url': wf_link, 'text': sp.usda_symbol},
+                {'text': len(sp.plants), 'val_class': 'zero' if len(sp.plants) == 0 else ''},
+                [
                     {'url': url_for('plant.add_plant', species_id=sp_id), 'icon': 'bi-plus-circle',
                      'val_class': 'icon add me-1'},
                     {'url': url_for('species.edit_species', species_id=sp_id), 'icon': 'bi-pencil',
                      'val_class': 'icon edit me-1'},
                     {'url': url_for('species.delete_species', species_id=sp_id),
                      'icon': 'bi-trash', 'val_class': 'icon delete'}
-                ],
-            })
+                ]
+            ])
     return render_template(
         'pages/species/list-species.html',
         order_list=[3, 'asc'],

@@ -83,7 +83,7 @@ class TableSpecies(Base):
     habit_key: int = Column(ForeignKey(TablePlantHabit.plant_habit_id, ondelete='SET NULL'))
     habit = relationship(TablePlantHabit, foreign_keys=[habit_key])
     is_native: bool = Column(Boolean)
-    duration = Column(Enum(DurationType))
+    duration: str = Column(Enum(DurationType))
     water_requirement: str = Column(Enum(WaterRequirementType))
     light_requirement: str = Column(Enum(LightRequirementType))
     soil_moisture: str = Column(Enum(SoilMoistureType))

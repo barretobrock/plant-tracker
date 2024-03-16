@@ -14,7 +14,7 @@ from sqlalchemy.orm import relationship
 
 from .base import Base
 from .species import TableSpecies
-from .maps import TablePlantRegion, TablePlantSubRegion, TablePolypoint
+from .maps import TablePlantRegion, TablePlantSubRegion, TablePlantLocation
 
 
 class PlantSourceType(StrEnum):
@@ -37,10 +37,11 @@ class TablePlant(Base):
     region = relationship(TablePlantRegion, foreign_keys=[region_key])
     sub_region_key: int = Column(ForeignKey(TablePlantSubRegion.sub_region_id, ondelete='SET NULL'))
     sub_region = relationship(TablePlantSubRegion, foreign_keys=[sub_region_key])
-    polypoint_key: int = Column(ForeignKey(TablePolypoint.polypoint_id, ondelete='SET NULL'))
+    plant_location_key: int = Column(ForeignKey(TablePlantLocation.plant_location_id, ondelete='SET NULL'))
+    plant_location = relationship(TablePlantLocation, foreign_keys=[plant_location_key])
     is_drip_irrigated: bool = Column(Boolean)
     is_in_container: bool = Column(Boolean)
-    plant_source = Column(Enum(PlantSourceType))
+    plant_source: str = Column(Enum(PlantSourceType))
     date_planted: datetime.date = Column(Date, nullable=False)
     images = relationship('TableImage', back_populates='plant')
     observation_logs = relationship('TableObservationLog', back_populates='plant')

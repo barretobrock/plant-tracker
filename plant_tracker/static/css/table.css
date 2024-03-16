@@ -43,3 +43,7 @@ td .icon.bool.bi-x {
 td .zero {
     filter: brightness(45%);
 }
+
+.f-smol {
+    font-size: 0.8rem;
+}

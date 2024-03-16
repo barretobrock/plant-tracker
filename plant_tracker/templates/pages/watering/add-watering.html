@@ -1,0 +1,16 @@
+{% import 'macros/form.html' as f %}
+{% extends 'base.html' %}
+{% block head %}
+    {{ super() }}
+{% endblock %}
+{% block content %}
+    {% set data_rows = [
+        ['watering_date'],
+        ['notes']
+    ] %}
+
+
+    {% call f.render_form(form, data_rows, post_endpoint_url) %}
+        {{ 'Edit' if is_edit else 'Add' }} a watering log
+    {% endcall %}
+{% endblock %}

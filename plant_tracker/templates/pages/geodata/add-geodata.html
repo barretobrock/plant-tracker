@@ -5,20 +5,19 @@
     {{ super() }}
 {% endblock %}
 {% block content %}
-
     {% set data_rows = [
-        ['species'],
-        ['plant_source', 'date_planted'],
-        ['is_drip_irrigated', 'is_in_container'],
-        ['shape_type'],
-        ['geodata']
+        ['geodata_type', 'shape_type'],
+        ['name'],
+        ['data']
     ] %}
 
 
     {% call f.render_form(form, data_rows, post_endpoint_url) %}
-        {{ 'Edit' if is_edit else 'Add' }} a plant
+        {{ 'Edit' if is_edit else 'Add' }} a {{ form['geodata_type'].data.value }}
     {% endcall %}
     {% call s.render_map(form['data'].data, boundaries, focus_color="magenta", needs_coordinates=True, shape_type=none) %}
 
     {% endcall %}
+
+
 {% endblock %}
