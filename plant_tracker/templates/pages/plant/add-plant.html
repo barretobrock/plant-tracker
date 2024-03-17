@@ -1,5 +1,5 @@
 {% import 'macros/form.html' as f %}
-{% import 'macros/svg.html' as s %}
+{% import 'macros/svg.jinja' as s %}
 {% extends 'base.html' %}
 {% block head %}
     {{ super() }}
@@ -18,7 +18,8 @@
     {% call f.render_form(form, data_rows, post_endpoint_url) %}
         {{ 'Edit' if is_edit else 'Add' }} a plant
     {% endcall %}
-    {% call s.render_map(form['data'].data, boundaries, focus_color="magenta", needs_coordinates=True, shape_type=none) %}
+
+    {% call s.render_input_map(map_points) %}
 
     {% endcall %}
 {% endblock %}

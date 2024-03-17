@@ -7,7 +7,7 @@ from flask import (
     url_for
 )
 
-from plant_tracker.core.geodata import get_boundaries
+from plant_tracker.core.geodata import get_all_geodata, get_boundaries
 from plant_tracker.forms.add_geodata import (
     AddGeodataForm,
     get_geodata_data_from_form,
@@ -39,7 +39,7 @@ def add_geodata(geo_type: str, plant_id: int = None):
                 'pages/geodata/add-geodata.html',
                 form=form,
                 is_edit=False,
-                boundaries=get_boundaries(session=session),
+                map_points=get_all_geodata(session=session),
                 post_endpoint_url=url_for(request.endpoint, geo_type=geo_type)
             )
         elif request.method == 'POST':
@@ -67,7 +67,7 @@ def edit_geodata(geo_type: str, obj_id: int = None):
                 'pages/geodata/add-geodata.html',
                 form=form,
                 is_edit=True,
-                boundaries=get_boundaries(session=session),
+                map_points=get_all_geodata(session=session, focus_ids=[] if obj_id is None else [obj_id]),
                 post_endpoint_url=url_for(request.endpoint, geo_type=geo_type, obj_id=obj_id)
             )
         elif request.method == 'POST':

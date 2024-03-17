@@ -1,0 +1,155 @@
+
+{% macro map_items_builder(geodata_list) -%}
+    {{ caller() }}
+    {% if geodata_list is none %}
+        {% set geodata_list = [] %}
+    {% endif %}
+    {% for g in geodata_list %}
+        {% if g.type.endswith('_point') %}
+            {# build circle#}
+            <circle cx="{{ g.x }}" cy="{{ g.y }}" r="{{ g.r }}" class="{{ g.class }}">
+                <title>{{ g.name }}</title>
+            </circle>
+        {% else %}
+            {# build polygon #}
+            <polygon points="{{ g.points }}" class="{{ g.class }}">
+                <title>{{ g.name }}</title>
+            </polygon>
+        {%  endif %}
+    {% endfor %}
+{% endmacro %}
+
+{% macro map_renderer(is_render_for_input, geodata_list) -%}
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/map.css') }}">
+    <script defer>
+        let is_render_for_input
+        {% if is_render_for_input %}
+            // We're rendering for an input-driven page (form)
+            is_render_for_input = true;
+
+            let svg_type_elem = document.getElementById('shape_type'); // this is a form field
+            let input_elem = document.getElementById('data');  // this is a form field
+            if (input_elem === null) {
+                // The forms that aren't specific to geodata will label this differently
+                input_elem = document.getElementById('geodata');
+            }
+
+            let id_name = svg_type_elem.value;  // 'point' or 'polygon'
+            let is_polygon = id_name === 'polygon';
+        {% else %}
+            // We're rendering a static map (info page)
+            is_render_for_input = false;
+        {% endif %}
+
+        function plotHandler(input_element, svg_element, is_polygon) {
+            if (is_polygon) {
+                // polygon
+                svg_element.setAttribute('points', input_element.value);
+            } else {
+                // circle
+                let splits = input_element.value.split(',');
+                if (splits.length === 0 || splits[0] === '') {
+                    svg_element.setAttribute('cx', "2000");
+                } else {
+                    svg_element.setAttribute('cx', splits[0]);
+                }
+
+                if (splits.length <= 1 || splits[1] === '') {
+                    svg_element.setAttribute('cy', "2000");
+                } else {
+                    svg_element.setAttribute('cy', splits[1]);
+                }
+                if (splits.length < 3 || splits[2] === '') {
+                    svg_element.setAttribute('r', "250");
+                } else {
+                    svg_element.setAttribute('r', splits[2]);
+                }
+            }
+        }
+        function plotPoints(elem) {
+            let polymap = document.getElementById(id_name);
+            plotHandler(elem, polymap, is_polygon)
+        }
+
+        window.addEventListener("load", function () {
+            if (is_render_for_input) {
+                let polymap = document.getElementById(id_name);
+
+                // Plot the initial data
+                plotHandler(input_elem, polymap, is_polygon);
+
+                // Handle plotting updates
+                input_elem.oninput = function(event) {
+                    return plotPoints(event.target);
+                }
+
+                // Handle removal of old shape when shape type input is changed
+                svg_type_elem.onchange = function (event) {
+                    id_name = event.target.value;
+                    is_polygon = id_name === 'polygon';
+                    if (is_polygon) {
+                        let prev_elem = document.getElementById('point')
+                        prev_elem.removeAttribute('cx');
+                        prev_elem.removeAttribute('cy');
+                        prev_elem.removeAttribute('r');
+                    } else {
+                        let prev_elem = document.getElementById('polygon')
+                        prev_elem.removeAttribute('points');
+                    }
+                }
+
+                // This section handles showing mouse coordinates
+                let map = document.getElementById('map');
+                let mapParent = map.parentElement.parentElement;
+                let coorddiv = document.getElementById('coords');
+                // Update mouse coordinates when moving over the svg
+                map.onmousemove = function(event) {
+                    let xRatio = 12780 / map.scrollWidth;
+                    let yRatio = 35210 / map.scrollHeight;
+                    // Starting point on page for x axis
+                    let xBuff = (mapParent.clientWidth - map.clientWidth ) / 2;
+                    let yBuff = (document.body.scrollHeight - map.scrollHeight - 56);
+                    // console.log(event);
+                    coorddiv.value = Math.round((event.pageX - xBuff) * xRatio) + ', ' + Math.round((event.pageY - yBuff) * yRatio);
+                }
+            }
+
+
+        })
+
+    </script>
+    {% if is_render_for_input %}
+        {# Mouse coordinate popup #}
+        <div id="coords-div">
+            <span>Mouse coordinates<sup>(mm)</sup>: </span>
+            <input id="coords" type="text" readonly/>
+        </div>
+    {% endif %}
+    {{ caller() }}
+    <svg id="map" viewBox="0 0 12780 35210">
+        {% if is_render_for_input %}
+            {# These will be used to plot objects controlled through the input element #}
+            <polygon id="polygon" points="" class="focus"></polygon>
+            <circle id="point" class="focus"></circle>
+        {% endif %}
+        {# Build boundaries, etc. #}
+        {% call map_items_builder(geodata_list) %}
+
+        {% endcall %}
+
+    </svg>
+{% endmacro %}
+
+{% macro render_input_map(geodata_list) -%}
+    {{ caller() }}
+    {% call map_renderer(is_render_for_input=True, geodata_list=geodata_list) %}
+    {% endcall %}
+
+{% endmacro %}
+
+{% macro render_static_map(geodata_list) -%}
+    {{ caller() }}
+    {% call map_renderer(is_render_for_input=False, geodata_list=geodata_list) %}
+    {% endcall %}
+{% endmacro %}
+

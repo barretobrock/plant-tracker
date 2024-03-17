@@ -195,14 +195,10 @@ def get_species(species_id: int):
         )
 
 
-@bp_species.route('/api/all', methods=['GET'])
 @bp_species.route('/all', methods=['GET'])
 def get_all_species():
     with get_app_eng().session_mgr() as session:
         species = session.query(TableSpecies).all()
-        if '/api/' in request.path:
-            session.expunge_all()
-            return jsonify(species), 200
         data_list = []
         sp: TableSpecies
         for sp in species:

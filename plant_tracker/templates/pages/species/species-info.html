@@ -1,5 +1,5 @@
 {% import 'macros/table_builder.html' as f %}
-{% import 'macros/svg.html' as s %}
+{% import 'macros/svg.jinja' as s %}
 {% extends 'base.html' %}
 {% block head %}
     {{ super() }}
@@ -41,7 +41,6 @@
                 </a>
             </div>
             <div class="float-end">
-                <a type="button" class="btn btn-outline-warning btn-sm" href="#"><i class="bi-wrench"> Maintenance</i></a>
                 <a type="button" class="btn btn-outline-primary btn-sm" href="/species/{{ data.species_id }}/edit"><i class="bi-pencil"></i> Edit</a>
                 <a type="button" class="btn btn-outline-danger btn-sm" href="/species/{{ data.species_id }}/delete"><i class="bi-trash"></i> Delete</a>
             </div>
@@ -111,25 +110,25 @@
                         <a type="button" href="/species/{{data.species_id}}/image/add" class="btn btn-outline-success btn-sm"><i class="bi-plus-circle-fill"></i></a>
                     </span>
                 </h4>
-                <div id="plant-pic-carousel" class="carousel slide" data-bs-slide="carousel">
+                <div id="plant-pic-carousel" class="carousel slide" data-bs-ride="carousel">
                     <div class="carousel-inner">
                         {% if data.images %}
                             {% for img in data.images %}
-                                <div class="carousel-item active">
+                                <div class="carousel-item {{'active' if loop.first else ''}}">
                                     <img src="{{ img.image_path }}" class="d-block w-100" alt="plant-pic">
                                 </div>
                             {% endfor %}
                         {% else %}
-                            <div class="carousel-item active">
+                            <div class="carousel-item">
                                 <img src="/images/winecup.jpg" class="d-block w-100" alt="plant-pic">
                             </div>
                         {% endif %}
                     </div>
-                    <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="prev">
+                    <button class="carousel-control-prev" type="button" data-bs-target="#plant-pic-carousel" data-bs-slide="prev">
                         <span class="carousel-control-prev-icon" aria-hidden="true"></span>
                         <span class="visually-hidden">Previous</span>
                     </button>
-                    <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="next">
+                    <button class="carousel-control-next" type="button" data-bs-target="#plant-pic-carousel" data-bs-slide="next">
                         <span class="carousel-control-next-icon" aria-hidden="true"></span>
                         <span class="visually-hidden">Next</span>
                     </button>
@@ -168,8 +167,8 @@
     </div>
     <div class="row">
         <div class="col">
-            {% if map_info %}
-                {% call s.render_map(map_info.data, map_info.boundaries, map_info.focus_color, none, map_info.shape_type) %}
+            {% if map_points %}
+                {% call s.render_static_map(map_points) %}
 
                 {% endcall %}
             {% else %}

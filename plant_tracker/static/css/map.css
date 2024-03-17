@@ -1,0 +1,51 @@
+#coords-div {
+    position: fixed;
+    top: 4em;
+    right: 1em;
+}
+
+.focus {
+    stroke-width: 10px !important;
+    fill: magenta !important;
+    stroke: magenta !important;
+}
+polygon.focus {
+    fill-opacity: 0.2;
+}
+circle.focus {
+    fill-opacity: 0.3;
+}
+
+.region,
+.sub_region,
+.other_polygon,
+.plant_point,
+.plant_polygon {
+    stroke-width: 5px;
+    fill-opacity: 0.05;
+}
+
+.region {
+    fill: white;
+    stroke: white;
+}
+
+.sub_region {
+    fill: grey;
+    stroke: grey;
+}
+.other_polygon,
+.other_point {
+    fill: cornflowerblue;
+    stroke: cornflowerblue;
+}
+.plant_point,
+.plant_polygon {
+    fill: green;
+    stroke: green;
+}
+
+
+#map {
+    border: 1px dotted cornflowerblue
+}

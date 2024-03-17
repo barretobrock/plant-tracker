@@ -43,15 +43,9 @@
                 <div class="collapse navbar-collapse" id="navbarNav">
                     {% set nav_left = {
                         'Home': 'main.index',
-                        'Family': {
-                            'Families List': 'family.get_all_families',
-                        },
-                        'Species': {
-                            'Species List': 'species.get_all_species'
-                        },
-                        'Plants': {
-                            'Plants List': 'plant.get_all_plants',
-                        },
+                        'Families': 'family.get_all_families',
+                        'Species': 'species.get_all_species',
+                        'Plants': 'plant.get_all_plants',
                         'Map': {
                             '+ Other Point': {'path': 'geodata.add_geodata', 'geo_type': 'other_point'},
                             '+ Other Group': {'path': 'geodata.add_geodata', 'geo_type': 'other_polygon'},

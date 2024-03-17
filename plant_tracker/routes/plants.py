@@ -11,7 +11,7 @@ from flask import (
 from pathlib import Path
 
 from plant_tracker.core.utils import default_if_prop_none
-from plant_tracker.core.geodata import get_boundaries
+from plant_tracker.core.geodata import get_all_geodata
 from plant_tracker.forms.add_image import (
     AddImageForm,
     get_image_data_from_form,
@@ -60,9 +60,7 @@ def add_plant(species_id: int = None):
             )
         elif request.method == 'POST':
             plant = get_plant_data_from_form(session=session, form_data=request.form)
-            session.add(plant)
-            session.commit()
-            session.refresh(plant)
+            plant = eng.commit_and_refresh_table_obj(session=session, table_obj=plant)
             flash(f'Plant {plant.species.scientific_name} ({plant.plant_id}) successfully added', 'success')
             return redirect(url_for('plant.get_plant', plant_id=plant.plant_id))
 
@@ -73,12 +71,17 @@ def edit_plant(plant_id: int = None):
     form = AddPlantForm()
     with eng.session_mgr() as session:
         form = populate_plant_form(session=session, form=form, plant_id=plant_id)
+        plant = session.query(TablePlant).filter(TablePlant.plant_id == plant_id).one_or_none()
+        if plant.plant_location:
+            focus_ids = [plant.plant_location.geodata.geodata_id]
+        else:
+            focus_ids = None
         if request.method == 'GET':
             return render_template(
                 'pages/plant/add-plant.html',
                 form=form,
                 is_edit=True,
-                boundaries=get_boundaries(session=session),
+                map_points=get_all_geodata(session=session, focus_ids=focus_ids),
                 post_endpoint_url=url_for(request.endpoint, plant_id=plant_id)
             )
         elif request.method == 'POST':
@@ -119,14 +122,9 @@ def get_plant(plant_id: int):
         plant: TablePlant
         plant = session.query(TablePlant).filter(TablePlant.plant_id == plant_id).one_or_none()
         if plant.plant_location:
-            map_info = {
-                'data': default_if_prop_none(plant, 'plant_location.geodata.data'),
-                'shape_type': 'polygon' if default_if_prop_none(plant, 'plant_location.geodata.is_polygon') else 'point',
-                'boundaries': get_boundaries(session=session),
-                'focus_color': 'green'
-            }
+            map_points = get_all_geodata(session=session, focus_ids=[plant.plant_location.geodata_key])
         else:
-            map_info = None
+            map_points = None
         return render_template(
             'pages/plant/plant-info.html',
             data=plant,
@@ -162,7 +160,7 @@ def get_plant(plant_id: int):
                     ] for x in plant.watering_logs
                 ]
             },
-            map_info=map_info
+            map_points=map_points
         )
 
 

@@ -1,5 +1,5 @@
 {% import 'macros/table_builder.html' as f %}
-{% import 'macros/svg.html' as s %}
+{% import 'macros/svg.jinja' as s %}
 {% extends 'base.html' %}
 {% block head %}
     {{ super() }}
@@ -29,7 +29,6 @@
     <div class="row">
         <div class="col my-2">
             <div class="float-end">
-                <a type="button" class="btn btn-outline-warning btn-sm" href="#"><i class="bi-wrench"> Maintenance</i></a>
                 <a type="button" class="btn btn-outline-primary btn-sm" href="/plant/{{ data.plant_id }}/edit"><i class="bi-pencil"></i> Edit</a>
                 <a type="button" class="btn btn-outline-danger btn-sm" href="/plant/{{ data.plant_id }}/delete"><i class="bi-trash"></i> Delete</a>
             </div>
@@ -69,10 +68,6 @@
                                     <img src="{{ img.image_path }}" class="d-block w-100" alt="plant-pic">
                                 </div>
                             {% endfor %}
-                        {% else %}
-                            <div class="carousel-item active">
-                                <img src="/images/winecup.jpg" class="d-block w-100" alt="plant-pic">
-                            </div>
                         {% endif %}
                     </div>
                     <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="prev">
@@ -128,8 +123,8 @@
     </div>
     <div class="row">
         <div class="col">
-            {% if map_info %}
-                {% call s.render_map(map_info.data, map_info.boundaries, map_info.focus_color, none, map_info.shape_type) %}
+            {% if map_points %}
+                {% call s.render_static_map(map_points) %}
 
                 {% endcall %}
             {% else %}

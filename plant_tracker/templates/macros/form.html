@@ -34,6 +34,8 @@
                                 {% set inputclass = inputclass ~ " form-textarea" %}
                             {% elif form[item].type == 'RadioField' %}
                                 {% set inputclass = inputclass ~ " form-radio" %}
+                            {% elif form[item].type == 'MultipleFileField' %}
+                                {% set inputclass = inputclass ~ " form-file-upload" %}
                             {% endif %}
 
                             <!--Here we instantiate the field item-->
@@ -67,11 +69,12 @@
                                                     var image_info = document.createElement('div');
                                                     var image = document.createElement('img');
                                                     image.setAttribute('src', event.target.result)
-                                                    image_info.innerText = 'Image details: ' + image.naturalHeight + 'x' + image.naturalWidth + ' Ratio: ' + image.naturalHeight / image.naturalWidth;
+                                                    console.log(image);
                                                     image_col.appendChild(image_info)
                                                     image_col.appendChild(image);
                                                     image_row.appendChild(image_col)
                                                     data_row.parentNode.insertBefore(image_col, data_row.nextSibling);
+                                                    image_info.innerText = 'Image details: ' + image.naturalHeight + 'x' + image.naturalWidth + ' Ratio: ' + image.naturalHeight / image.naturalWidth;
                                                 };  // data url
                                                 reader.readAsDataURL(blob);
                                             }

@@ -8,6 +8,11 @@
     color: var(--txt-green);
 }
 
+.form-file-upload {
+    height: 85px !important;
+    padding-top: 45px !important;
+}
+
 .form-textarea,
 .form-radio {
     height: 150px !important;

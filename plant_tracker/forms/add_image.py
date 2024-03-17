@@ -32,7 +32,7 @@ image_attr_map = {
 class AddImageForm(FlaskForm):
     """Add image form"""
 
-    image_data_url = ImagePasteField('Image Paste Detection')
+    image_data_url = ImagePasteField('')
     image_path = MultipleFileField(label='Upload Image(s)')
 
     submit = SubmitField('Submit')

@@ -1,6 +1,5 @@
 from flask import (
     Blueprint,
-    current_app,
     flash,
     jsonify,
     redirect,
@@ -8,7 +7,6 @@ from flask import (
     request,
     url_for
 )
-from flask_cors import cross_origin
 
 from plant_tracker.forms.add_family import (
     AddFamilyForm,
@@ -88,18 +86,18 @@ def get_all_families():
         fm: TablePlantFamily
         for fm in fams:
             fm_id = fm.plant_family_id
-            data_list.append({
-                'id': {'url': url_for('family.get_family', family_id=fm_id), 'text': fm_id,
-                       'icon': 'bi-info-circle'},
-                'scientific_name': fm.scientific_name,
-                'common_name': fm.common_name,
-                '': [
+            data_list.append([
+                {'url': url_for('family.get_family', family_id=fm_id), 'text': fm_id,
+                 'icon': 'bi-info-circle'},
+                fm.scientific_name,
+                fm.common_name,
+                [
                     {'url': url_for('family.edit_family', family_id=fm_id),
                      'icon': 'bi-pencil', 'val_class': 'icon edit me-1'},
                     {'url': url_for('family.delete_family', family_id=fm_id),
                      'icon': 'bi-trash', 'val_class': 'icon delete'}
                 ]
-            })
+            ])
     return render_template(
         'pages/family/list-families.html',
         order_list=[1, 'asc'],

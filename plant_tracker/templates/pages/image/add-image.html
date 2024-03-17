@@ -9,7 +9,6 @@
         ['image_data_url']
     ] %}
 
-
     {% call f.render_form(form, data_rows, post_endpoint_url, is_file_upload=True) %}
         {{ 'Edit' if is_edit else 'Add' }} an image
     {% endcall %}

@@ -70,10 +70,8 @@ a.nav-link.active {
     color: var(--txt-red);
 }
 
-#coords-div {
-    position: fixed;
-    top: 4em;
-    right: 1em;
+.carousel-inner {
+    height: 450px;
 }
 
 /* Icons */
