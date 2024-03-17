@@ -15,6 +15,16 @@ _Note: 'Unreleased' section below is used for untagged changes that will be issu
 #### Security
 __BEGIN-CHANGELOG__
  
+### [0.0.4] - 2024-03-10
+#### Added
+ - Support for pasting images from clipboard
+ - All forms have 'cancel' button that just goes back a page
+ - Geodata, maintenance, observation and watering logging support
+#### Changed
+ - Broke out routes for alternate names and scheduled maintenance
+#### Fixed
+ - image carousel now works
+ 
 ### [0.0.3] - 2024-03-09
 #### Added
  - More routes, still not done with fully-functional ;)
