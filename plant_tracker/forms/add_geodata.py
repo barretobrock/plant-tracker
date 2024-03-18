@@ -5,7 +5,6 @@ from typing import (
 
 from flask_wtf import FlaskForm
 from shapely.geometry import Point
-from shapely.geometry.polygon import Polygon
 from wtforms import (
     SelectField,
     StringField,
@@ -16,7 +15,8 @@ from wtforms.validators import DataRequired
 
 from plant_tracker.core.geodata import (
     GeodataPoint,
-    GeodataPolygon
+    GeodataPolygon,
+    process_gdata_and_assign_location
 )
 from plant_tracker.model import (
     GeodataType,
@@ -76,9 +76,9 @@ def populate_geodata_form(session, form: AddGeodataForm, geo_type_str: str, obj_
             geodata_obj = pp.geodata
 
         if geodata_obj.is_polygon:
-            data = GeodataPolygon.from_string(geodata_obj.data)
+            data = GeodataPolygon.from_string(geodata_obj.data, name=geodata_obj.name, geo_type=geo_type)
         else:
-            data = GeodataPoint.from_string(geodata_obj.data)
+            data = GeodataPoint.from_string(geodata_obj.data, name=geodata_obj.name, geo_type=geo_type)
 
         form_field_map = {
             'geodata_type': geo_type,
@@ -106,55 +106,6 @@ def get_geodata_data_from_form(session, form_data, geo_type_str: str, obj_id: in
         # New object
         pp = obj_details['obj']()
 
-    try:
-        geodata = GeodataPoint.from_string(form_data['data'])
-        is_polygon = False
-    except Exception:
-        geodata = GeodataPolygon.from_string(form_data['data'])
-        is_polygon = True
-    name = form_data['name']
-
-    if geo_type in [GeodataType.OTHER_POINT, GeodataType.OTHER_POLYGON]:
-        pp.name = name
-        pp.data = geodata.to_string()
-        pp.is_polygon = is_polygon
-        pp.geodata_type = geo_type
-    else:
-        # Create a new geodata, bind to the other object
-        geo_obj = TableGeodata(
-            geodata_type=geo_type,
-            name=name,
-            is_polygon=is_polygon,
-            data=geodata.to_string()
-        )
-        pp.geodata = geo_obj
-
-        # Extract first or only point for next section
-        if is_polygon:
-            pt = Point(geodata.points[0])
-        else:
-            pt = Point(geodata.x, geodata.y)
-
-        # Add object-specific attributes
-        if geo_type == GeodataType.REGION:
-            pp.region_name = name
-        elif geo_type == GeodataType.SUB_REGION:
-            pp.sub_region_name = name
-            regions: List[TablePlantRegion]
-            regions = session.query(TablePlantRegion).all()
-            for region in regions:
-                region_poly = Polygon(GeodataPolygon.from_string(region.geodata.data).points)
-                if region_poly.covers(pt):
-                    pp.region_key = region.region_id
-                    break
-        elif geo_type in [GeodataType.PLANT_POINT, GeodataType.PLANT_GROUP]:
-            pp.plant_location_name = name
-            sub_regions: List[TablePlantSubRegion]
-            sub_regions = session.query(TablePlantSubRegion).all()
-            for sub_region in sub_regions:
-                sub_region_poly = Polygon(GeodataPolygon.from_string(sub_region.geodata.data).points)
-                if sub_region_poly.covers(pt):
-                    pp.sub_region_key = sub_region.sub_region_id
-                    break
+    pp = process_gdata_and_assign_location(session=session, table_obj=pp, form_data=form_data, geo_type=geo_type)
 
     return pp

@@ -1,14 +1,18 @@
 from dataclasses import dataclass
 from typing import (
     Dict,
-    List
+    List,
+    Union
 )
 
+from shapely.geometry import Point
+from shapely.geometry.polygon import Polygon
 from sqlalchemy.sql import not_
 
 from plant_tracker.model import (
     GeodataType,
     TableGeodata,
+    TablePlantLocation,
     TablePlantRegion,
     TablePlantSubRegion
 )
@@ -119,3 +123,74 @@ def get_boundaries(session) -> List[Dict]:
         })
 
     return boundaries
+
+
+GEODATA_TABLE_OBJ_TYPE = Union[TableGeodata, TablePlantLocation, TablePlantSubRegion, TablePlantRegion]
+
+
+def process_gdata_and_assign_location(session, table_obj: GEODATA_TABLE_OBJ_TYPE, form_data: Dict,
+                                      geo_type: GeodataType, alt_name: str = None) -> GEODATA_TABLE_OBJ_TYPE:
+
+    form_geodata_key = 'geodata' if isinstance(table_obj, TablePlantLocation) else 'data'
+    geodata_name = alt_name if alt_name is not None else form_data['name']
+    try:
+        geodata = GeodataPoint.from_string(form_data[form_geodata_key], name=geodata_name, geo_type=geo_type)
+        is_polygon = False
+    except Exception:
+        geodata = GeodataPolygon.from_string(form_data[form_geodata_key], name=geodata_name, geo_type=geo_type)
+        is_polygon = True
+
+    if geo_type in [GeodataType.OTHER_POINT, GeodataType.OTHER_POLYGON]:
+        table_obj.name = geodata_name
+        table_obj.data = geodata.to_string()
+        table_obj.is_polygon = is_polygon
+        table_obj.geodata_type = geo_type
+    elif table_obj.geodata:
+        # Apply new geodata to existing geodata object
+        table_obj.geodata.name = geodata_name
+        table_obj.geodata.data = geodata.to_string()
+        table_obj.geodata.is_polygon = is_polygon
+        table_obj.geodata.geodata_type = geo_type
+
+    else:
+        # Create a new geodata object, bind to the other object
+        geo_obj = TableGeodata(
+            geodata_type=geo_type,
+            name=geodata_name,
+            is_polygon=is_polygon,
+            data=geodata.to_string()
+        )
+        table_obj.geodata = geo_obj
+
+    # Extract first or only point for next section
+    if is_polygon:
+        pt = Point(geodata.points[0])
+    else:
+        pt = Point(geodata.x, geodata.y)
+
+    if isinstance(table_obj, TablePlantRegion):
+        table_obj.region_name = geodata_name
+        return table_obj
+    elif isinstance(table_obj, TablePlantSubRegion):
+        table_obj.sub_region_name = geodata_name
+        regions: List[TablePlantRegion]
+        regions = session.query(TablePlantRegion).all()
+        for region in regions:
+            region_poly = Polygon(GeodataPolygon.from_string(
+                region.geodata.data, name=region.geodata.name, geo_type=region.geodata.geodata_type).points)
+            if region_poly.covers(pt):
+                table_obj.region_key = region.region_id
+                break
+    elif isinstance(table_obj, TablePlantLocation):
+        table_obj.plant_location_name = geodata_name
+
+        sub_regions: List[TablePlantSubRegion]
+        sub_regions = session.query(TablePlantSubRegion).all()
+        for sub_region in sub_regions:
+            sub_region_poly = Polygon(GeodataPolygon.from_string(
+                sub_region.geodata.data, name=sub_region.geodata.name, geo_type=sub_region.geodata.geodata_type).points)
+            if sub_region_poly.covers(pt):
+                table_obj.sub_region_key = sub_region.sub_region_id
+                table_obj.region_key = sub_region.region_key
+                break
+    return table_obj

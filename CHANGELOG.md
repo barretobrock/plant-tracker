@@ -15,6 +15,13 @@ _Note: 'Unreleased' section below is used for untagged changes that will be issu
 #### Security
 __BEGIN-CHANGELOG__
  
+### [0.0.5] - 2024-03-18
+#### Changed
+ - Logic for determining location is now handled under one function for all geodata
+#### Fixed
+ - Adjusted model to better organize region/subregion hierarchy for plant location
+ - Issue where plant family table object wasn't being properly referenced
+ 
 ### [0.0.4] - 2024-03-10
 #### Added
  - Support for pasting images from clipboard

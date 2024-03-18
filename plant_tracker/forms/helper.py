@@ -110,7 +110,7 @@ def extract_form_data_to_obj(form_data, table_obj, obj_attr_map, session):
                     and attr_form_data != ''):
                 # Swap nested objects by querying for the new one
                 sub_obj = session.query(sub_obj_class).\
-                    filter(sub_obj_class.__getattribute__(sub_obj_attr_name) == attr_form_data).one_or_none()
+                    filter(getattr(sub_obj_class, sub_obj_attr_name) == attr_form_data).one_or_none()
                 table_obj.__setattr__(sub_obj_name, sub_obj)
         else:
             table_obj_val = table_obj.__getattribute__(att_table_obj_name)

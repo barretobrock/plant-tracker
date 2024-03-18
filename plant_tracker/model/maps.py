@@ -47,6 +47,7 @@ class TablePlantRegion(Base):
     geodata_key: int = Column(ForeignKey(TableGeodata.geodata_id, ondelete='SET NULL'))
     geodata = relationship('TableGeodata', foreign_keys=[geodata_key], backref='region')
     sub_regions = relationship('TablePlantSubRegion', back_populates='region')
+    plant_locations = relationship('TablePlantLocation', back_populates='region')
 
     def __repr__(self):
         return self.build_repr_for_class(self)
@@ -76,6 +77,8 @@ class TablePlantLocation(Base):
     geodata = relationship('TableGeodata', foreign_keys=[geodata_key], backref='plant_location')
     sub_region_key: int = Column(ForeignKey(TablePlantSubRegion.sub_region_id, ondelete='SET NULL'))
     sub_region = relationship('TablePlantSubRegion', back_populates='plant_locations')
+    region_key: int = Column(ForeignKey(TablePlantRegion.region_id, ondelete='SET NULL'))
+    region = relationship('TablePlantRegion', back_populates='plant_locations')
 
     def __repr__(self):
         return self.build_repr_for_class(self)
