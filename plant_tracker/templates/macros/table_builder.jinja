@@ -58,6 +58,7 @@
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs5/dt-2.0.1/datatables.min.css"/>
     <script type="text/javascript" src="https://cdn.datatables.net/v/bs5/dt-2.0.1/datatables.min.js"></script>
     <script>
+
         let tbl_id_name = '#{{ table_id }}';
         $(document).ready(function () {
             $(tbl_id_name).DataTable({
@@ -78,7 +79,8 @@
                         }
                     }
                 },
-
+                columnDefs: [{{ column_config }}],
+                scrollX: true,
                 info: true,
                 paging: true,
                 lengthChange: true,

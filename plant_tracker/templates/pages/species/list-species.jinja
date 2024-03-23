@@ -1,0 +1,14 @@
+{% import 'macros/table_builder.html' as f %}
+{% extends 'base.html' %}
+{% block head %}
+    {{ super() }}
+{% endblock %}
+{% block content %}
+    <div class="table-responsive-sm">
+        {% call f.simple_table(table_id, headers, data_rows) %}
+            Species
+<!--        {% call f.sortable_table(table_id, headers, data_rows, order_list) %}-->
+<!--            Species-->
+        {% endcall %}
+    </div>
+{% endblock %}

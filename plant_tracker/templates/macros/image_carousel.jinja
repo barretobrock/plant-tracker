@@ -1,0 +1,30 @@
+{% macro image_carousel(div_id, obj, is_plant) -%}
+    {% set item_type = 'plant' if is_plant else 'species' %}
+    {% set item_id = obj.plant_id if is_plant else obj.species_id %}
+    <h4 class="card-title">
+        {{ caller() }}
+        Photos
+        <span class="float-end">
+            <a type="button" href="/image/{{ item_type }}/{{ item_id }}/add" class="btn btn-outline-success btn-sm"><i class="bi-plus-circle-fill"></i></a>
+        </span>
+    </h4>
+    <div id="{{ div_id }}" class="carousel slide" data-bs-slide="carousel">
+        <div class="carousel-inner">
+            {% if obj.images %}
+                {% for img in obj.images %}
+                    <div class="carousel-item {{'active' if loop.first else ''}}">
+                        <img src="{{ img.image_path }}" class="d-block w-100" alt="plant-pic">
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+        </button>
+    </div>
+{%- endmacro %}
