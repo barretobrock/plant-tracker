@@ -23,6 +23,7 @@ from plant_tracker.routes.helpers import (
     log_after,
     log_before,
 )
+from plant_tracker.routes.image import bp_image
 from plant_tracker.routes.main import bp_main
 from plant_tracker.routes.maintenance import bp_maint
 from plant_tracker.routes.observation import bp_obs
@@ -36,6 +37,7 @@ from plant_tracker.routes.watering import bp_watering
 ROUTES = [
     bp_altname,
     bp_family,
+    bp_image,
     bp_main,
     bp_maint,
     bp_obs,

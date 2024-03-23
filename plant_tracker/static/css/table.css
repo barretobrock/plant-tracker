@@ -3,6 +3,17 @@
     position: relative;
 }
 
+.scrollable-table {
+    overflow-x: auto;
+}
+.table {
+    width: 100% !important;
+}
+
+td, th {
+    overflow-x: hidden;
+}
+
 .page-link {
     color: var(--txt-blue);
 }
@@ -46,4 +57,8 @@ td .zero {
 
 .f-smol {
     font-size: 0.8rem;
+}
+
+td img {
+    height: 60px;
 }

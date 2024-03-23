@@ -83,7 +83,14 @@ def populate_form(form: Form, field_map: Dict[str, Union[str, bool]]) -> Form:
 def extract_form_data_to_obj(form_data, table_obj, obj_attr_map, session):
     """Extracts form data and applies it to the table object"""
     for attr_name, attr_details in obj_attr_map.items():
-        attr_form_data = form_data[attr_name]
+        try:
+            attr_form_data = form_data[attr_name]
+        except KeyError:
+            if attr_name.startswith('is_'):
+                # Boolean values don't show up in default
+                attr_form_data = False
+            else:
+                raise ValueError(f'Form attribute "{attr_name}" was missing from form. Unable to proceed.')
         if attr_form_data in bool_with_unknown_list:
             if attr_form_data == 'unknown':
                 attr_form_data = None

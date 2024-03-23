@@ -1,10 +1,13 @@
 {% import 'macros/table_builder.jinja' as f %}
-{% extends 'base.html' %}
+{% extends 'base.jinja' %}
 {% block head %}
     {{ super() }}
 {% endblock %}
 {% block content %}
-    {% call f.sortable_table(table_id, headers, data_rows, order_list) %}
-        Plants
-    {% endcall %}
+    <div>
+        {% call f.sortable_table(table_id, headers, plant_list, order_list) %}
+            {{ 'Dead ' if is_dead else '' }}Plants
+        {% endcall %}
+    </div>
+
 {% endblock %}

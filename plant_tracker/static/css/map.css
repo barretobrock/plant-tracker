@@ -9,6 +9,11 @@
     fill: magenta !important;
     stroke: magenta !important;
 }
+.original {
+    fill: pink !important;
+    stroke: pink !important;
+}
+
 polygon.focus {
     fill-opacity: 0.2;
 }
@@ -18,11 +23,15 @@ circle.focus {
 
 .region,
 .sub_region,
-.other_polygon,
-.plant_point,
-.plant_polygon {
+.other_point,
+.other_polygon {
     stroke-width: 5px;
     fill-opacity: 0.05;
+}
+.plant_point,
+.plant_polygon {
+    stroke-width: 10px;
+    fill-opacity: 0.5;
 }
 
 .region {
@@ -48,4 +57,8 @@ circle.focus {
 
 #map {
     border: 1px dotted cornflowerblue
+}
+
+.irrigation {
+    fill: cornflowerblue;
 }

@@ -30,7 +30,7 @@ def add_altname(species_id: int):
         form = populate_name_form(session=session, form=form)
         if request.method == 'GET':
             return render_template(
-                'pages/altname/add-altname.html',
+                'pages/altname/add-altname.jinja',
                 form=form,
                 is_edit=False,
                 post_endpoint_url=url_for(request.endpoint, species_id=species_id)
@@ -53,7 +53,7 @@ def edit_altname(species_id: int = None, alternate_name_id: int = None):
         form = populate_name_form(session=session, form=form, alternate_name_id=alternate_name_id)
         if request.method == 'GET':
             return render_template(
-                'pages/altname/add-altname.html',
+                'pages/altname/add-altname.jinja',
                 form=form,
                 is_edit=True,
                 post_endpoint_url=url_for(request.endpoint, species_id=species_id, alternate_name_id=alternate_name_id)
@@ -76,7 +76,7 @@ def delete_alt_name(species_id: int = None, alternate_name_id: int = None):
             filter(TableAlternateNames.alternate_name_id == alternate_name_id).one_or_none()
         if request.method == 'GET':
             return render_template(
-                'pages/confirm.html',
+                'pages/confirm.jinja',
                 confirm_title=f'Confirm delete of ',
                 confirm_focus=altname.name,
                 confirm_url=url_for('altname.delete_alt_name', species_id=species_id,

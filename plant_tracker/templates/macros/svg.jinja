@@ -1,3 +1,7 @@
+{% macro droplet_svg(x, y, r) %}
+    {% set r = r/4 if r else 50 %}
+    <circle cx="{{ x + r }}" cy="{{ y - r }}" r="{{ r }}" class="irrigation"></circle>
+{% endmacro %}
 
 {% macro map_items_builder(geodata_list) -%}
     {{ caller() }}
@@ -10,16 +14,27 @@
             <circle cx="{{ g.x }}" cy="{{ g.y }}" r="{{ g.r }}" class="{{ g.class }}">
                 <title>{{ g.name }}</title>
             </circle>
+            {% if g.irrigated %}
+                {{ droplet_svg(g.x, g.y, g.r) }}
+            {% endif %}
         {% else %}
             {# build polygon #}
             <polygon points="{{ g.points }}" class="{{ g.class }}">
                 <title>{{ g.name }}</title>
             </polygon>
+            {% if g.irrigated %}
+                {% set x, y = g.points.split(',')[:1] %}
+                {{ droplet_svg(x, y) }}
+            {% endif %}
         {%  endif %}
     {% endfor %}
 {% endmacro %}
 
-{% macro map_renderer(is_render_for_input, geodata_list) -%}
+{% macro map_renderer(is_render_for_input, geodata_list, x_start, y_start, x_max, y_max) -%}
+    {% set x_start = x_start if x_start else 0 %}
+    {% set y_start = y_start if y_start else 0 %}
+    {% set x_max = x_max if x_max else 12780 %}
+    {% set y_max = y_max if y_max else 35210 %}
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/map.css') }}">
     <script defer>
         let is_render_for_input
@@ -126,7 +141,7 @@
         </div>
     {% endif %}
     {{ caller() }}
-    <svg id="map" viewBox="0 0 12780 35210">
+    <svg id="map" viewBox="{{ x_start }} {{ y_start }} {{ x_max }} {{ y_max }}">
         {% if is_render_for_input %}
             {# These will be used to plot objects controlled through the input element #}
             <polygon id="polygon" points="" class="focus"></polygon>
@@ -140,16 +155,16 @@
     </svg>
 {% endmacro %}
 
-{% macro render_input_map(geodata_list) -%}
+{% macro render_input_map(geodata_list, x_start, y_start, x_max, y_max) -%}
     {{ caller() }}
-    {% call map_renderer(is_render_for_input=True, geodata_list=geodata_list) %}
+    {% call map_renderer(is_render_for_input=True, geodata_list=geodata_list, x_start=x_start, y_start=y_start, x_max=x_max, y_max=y_max) %}
     {% endcall %}
 
 {% endmacro %}
 
-{% macro render_static_map(geodata_list) -%}
+{% macro render_static_map(geodata_list, x_start, y_start, x_max, y_max) -%}
     {{ caller() }}
-    {% call map_renderer(is_render_for_input=False, geodata_list=geodata_list) %}
+    {% call map_renderer(is_render_for_input=False, geodata_list=geodata_list, x_start=x_start, y_start=y_start, x_max=x_max, y_max=y_max) %}
     {% endcall %}
 {% endmacro %}
 

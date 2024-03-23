@@ -30,7 +30,7 @@ def add_observation(plant_id: int = None):
         form = populate_observation_form(session=session, form=form)
         if request.method == 'GET':
             return render_template(
-                'pages/observation/add-observation.html',
+                'pages/observation/add-observation.jinja',
                 form=form,
                 is_edit=False,
                 post_endpoint_url=url_for(request.endpoint, plant_id=plant_id)
@@ -52,7 +52,7 @@ def edit_observation(plant_id: int = None, observation_log_id: int = None):
                                          observation_log_id=observation_log_id)
         if request.method == 'GET':
             return render_template(
-                'pages/observation/add-observation.html',
+                'pages/observation/add-observation.jinja',
                 form=form,
                 is_edit=True,
                 post_endpoint_url=url_for(request.endpoint, plant_id=plant_id,
@@ -77,7 +77,7 @@ def delete_observation(plant_id: int = None, observation_log_id: int = None):
             filter(TableObservationLog.observation_log_id == observation_log_id).one_or_none()
         if request.method == 'GET':
             return render_template(
-                'pages/confirm.html',
+                'pages/confirm.jinja',
                 confirm_title=f'Confirm delete of ',
                 confirm_focus=f"{obs.observation_type} - {obs.observation_date:%F}",
                 confirm_url=url_for('observation.delete_observation',

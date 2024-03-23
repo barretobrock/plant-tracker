@@ -31,7 +31,7 @@ def add_maintenance(plant_id: int = None):
         form = populate_maintenance_form(session=session, form=form)
         if request.method == 'GET':
             return render_template(
-                'pages/maintenance/add-maintenance.html',
+                'pages/maintenance/add-maintenance.jinja',
                 form=form,
                 is_edit=False,
                 post_endpoint_url=url_for(request.endpoint, plant_id=plant_id)
@@ -55,7 +55,7 @@ def edit_maintenance(plant_id: int = None, maintenance_log_id: int = None):
                                          maintenance_log_id=maintenance_log_id)
         if request.method == 'GET':
             return render_template(
-                'pages/maintenance/add-maintenance.html',
+                'pages/maintenance/add-maintenance.jinja',
                 form=form,
                 is_edit=True,
                 post_endpoint_url=url_for(request.endpoint, plant_id=plant_id,
@@ -80,7 +80,7 @@ def delete_maintenance(plant_id: int = None, maintenance_log_id: int = None):
             filter(TableMaintenanceLog.maintenance_log_id == maintenance_log_id).one_or_none()
         if request.method == 'GET':
             return render_template(
-                'pages/confirm.html',
+                'pages/confirm.jinja',
                 confirm_title=f'Confirm delete of ',
                 confirm_focus=f"{maint.maintenance_type} - {maint.maintenance_date:%F}",
                 confirm_url=url_for('maintenance.delete_maintenance',

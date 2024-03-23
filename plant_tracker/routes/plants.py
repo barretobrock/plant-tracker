@@ -1,26 +1,21 @@
 from flask import (
     Blueprint,
-    current_app,
     flash,
-    jsonify,
     redirect,
     render_template,
     request,
     url_for
 )
-from pathlib import Path
+
+from sqlalchemy.sql import (
+    and_,
+    not_
+)
 
 from plant_tracker.core.utils import default_if_prop_none
 from plant_tracker.core.geodata import (
-    GeodataPoint,
-    GeodataPolygon,
     process_gdata_and_assign_location,
     get_all_geodata
-)
-from plant_tracker.forms.add_image import (
-    AddImageForm,
-    get_image_data_from_form,
-    populate_image_form
 )
 from plant_tracker.forms.add_plant import (
     AddPlantForm,
@@ -30,7 +25,6 @@ from plant_tracker.forms.add_plant import (
 from plant_tracker.forms.confirm_delete import ConfirmDeleteForm
 from plant_tracker.model import (
     GeodataType,
-    TableGeodata,
     TablePlant,
     TablePlantLocation,
     TableSpecies
@@ -48,6 +42,7 @@ bp_plant = Blueprint('plant', __name__, url_prefix='/plant')
 def add_plant(species_id: int = None):
     eng = get_app_eng()
     form = AddPlantForm()
+    log = get_app_logger()
     with eng.session_mgr() as session:
         form = populate_plant_form(session=session, form=form)
         if species_id:
@@ -58,14 +53,40 @@ def add_plant(species_id: int = None):
 
         if request.method == 'GET':
             return render_template(
-                'pages/plant/add-plant.html',
+                'pages/plant/add-plant.jinja',
                 form=form,
                 is_edit=False,
-                post_endpoint_url=url_for(request.endpoint)
+                map_points=get_all_geodata(session=session),
+                post_endpoint_url=url_for(request.endpoint, species_id=species_id)
             )
         elif request.method == 'POST':
-            plant = get_plant_data_from_form(session=session, form_data=request.form)
+            if species_id:
+                # This isn't populated in the form by default since it's pre-populated
+                request_form = dict(request.form)
+                request_form['species'] = species.common_name
+                plant = get_plant_data_from_form(session=session, form_data=request_form)
+            else:
+                plant = get_plant_data_from_form(session=session, form_data=request.form)
             plant = eng.commit_and_refresh_table_obj(session=session, table_obj=plant)
+            if request.form.get('geodata'):
+                # Ensure geodata is updated
+                log.debug('Ensuring plant geodata is synced with database object... ')
+                gtype = GeodataType(f'plant_{request.form["shape_type"]}')
+                loc_name = f'{plant.species.common_name}#{plant.plant_id}'
+
+                if plant.plant_location is None:
+                    log.debug('Creating new PlantLocation object...')
+                    plant.plant_location = TablePlantLocation(plant_location_name=loc_name)
+
+                plant.plant_location = process_gdata_and_assign_location(
+                    session=session,
+                    table_obj=plant.plant_location,
+                    form_data=request.form,
+                    geo_type=gtype,
+                    alt_name=loc_name
+                )
+                session.add(plant)
+
             flash(f'Plant {plant.species.scientific_name} ({plant.plant_id}) successfully added', 'success')
             return redirect(url_for('plant.get_plant', plant_id=plant.plant_id))
 
@@ -74,6 +95,7 @@ def add_plant(species_id: int = None):
 def edit_plant(plant_id: int = None):
     eng = get_app_eng()
     form = AddPlantForm()
+    log = get_app_logger()
     with eng.session_mgr() as session:
         form = populate_plant_form(session=session, form=form, plant_id=plant_id)
         plant = session.query(TablePlant).filter(TablePlant.plant_id == plant_id).one_or_none()
@@ -83,7 +105,7 @@ def edit_plant(plant_id: int = None):
             focus_ids = None
         if request.method == 'GET':
             return render_template(
-                'pages/plant/add-plant.html',
+                'pages/plant/add-plant.jinja',
                 form=form,
                 is_edit=True,
                 map_points=get_all_geodata(session=session, focus_ids=focus_ids),
@@ -91,19 +113,28 @@ def edit_plant(plant_id: int = None):
             )
         elif request.method == 'POST':
             plant = get_plant_data_from_form(session=session, form_data=request.form, plant_id=plant_id)
-            if form['geodata'].data:
-                gtype = GeodataType(f'plant_{request.form["shape_type"]}')
+            if request.form.get('geodata'):
+                if plant.is_dead and plant.plant_location:
+                    # Handle process of removing any geodata
+                    log.debug('Plant is marked dead - handling removal of location data')
+                    session.delete(plant.plant_location.geodata)
+                    session.delete(plant.plant_location)
+                else:
+                    # Ensure geodata is updated
+                    log.debug('Ensuring plant geodata is synced with database object... ')
+                    gtype = GeodataType(f'plant_{request.form["shape_type"]}')
 
-                if plant.plant_location is None:
-                    plant.plant_location = TablePlantLocation()
+                    if plant.plant_location is None:
+                        log.debug('Creating new PlantLocation object...')
+                        plant.plant_location = TablePlantLocation()
 
-                plant.plant_location = process_gdata_and_assign_location(
-                    session=session,
-                    table_obj=plant.plant_location,
-                    form_data=request.form,
-                    geo_type=gtype,
-                    alt_name=f'{plant.species.common_name}#{plant_id}'
-                )
+                    plant.plant_location = process_gdata_and_assign_location(
+                        session=session,
+                        table_obj=plant.plant_location,
+                        form_data=request.form,
+                        geo_type=gtype,
+                        alt_name=f'{plant.species.common_name}#{plant_id}'
+                    )
 
             session.add(plant)
             flash(f'Plant {plant.species.scientific_name} ({plant.plant_id}) successfully updated', 'success')
@@ -120,7 +151,7 @@ def get_plant(plant_id: int):
         else:
             map_points = None
         return render_template(
-            'pages/plant/plant-info.html',
+            'pages/plant/plant-info.jinja',
             data=plant,
             observation_info={
                 'headers': ['Type', 'Rating', 'Height mm', 'Width mm', 'Date', 'Notes'],
@@ -158,27 +189,32 @@ def get_plant(plant_id: int):
         )
 
 
-@bp_plant.route('/api/all', methods=['GET'])
-@bp_plant.route('/all', methods=['GET'])
+@bp_plant.route('/dead', methods=['GET'])
 @bp_plant.route('/by_species/<int:species_id>/all', methods=['GET'])
+@bp_plant.route('/all', methods=['GET'])
 def get_all_plants(species_id: int = None):
     with get_app_eng().session_mgr() as session:
+        plant_filters = []
+        is_dead = False
         if species_id:
-            plants = session.query(TablePlant).filter(TablePlant.species_key == species_id).all()
+            plant_filters.append(TablePlant.species_key == species_id)
+        if '/dead' in request.path:
+            is_dead = True
+            plant_filters.append(TablePlant.is_dead)
         else:
-            plants = session.query(TablePlant).all()
-        if '/api/' in request.path:
-            return jsonify(plants), 200
-        data_list = []
+            plant_filters.append(not_(TablePlant.is_dead))
+        plants = session.query(TablePlant).filter(and_(*plant_filters)).all()
+        plant_list = []
         pt: TablePlant
         for pt in plants:
             pt_id = pt.plant_id
-            data_list.append([
+            plant_list.append([
                 {'url': url_for('plant.get_plant', plant_id=pt_id), 'text': pt_id,
                  'icon': 'bi-info-circle'},
                 pt.species.scientific_name,
                 pt.species.common_name,
                 default_if_prop_none(pt, 'plant_source'),
+                default_if_prop_none(pt, 'date_planted'),
                 default_if_prop_none(pt, 'plant_location.region.region_name'),
                 default_if_prop_none(pt, 'plant_location.sub_region.sub_region_name'),
                 [
@@ -189,10 +225,11 @@ def get_all_plants(species_id: int = None):
                 ]
             ])
     return render_template(
-        'pages/plant/list-plants.html',
+        'pages/plant/list-plants.jinja',
         order_list=[1, 'asc'],
-        data_rows=data_list,
-        headers=['ID', 'Scientific Name', 'Common Name', 'Plant Source', 'Region', 'Sub Region', ''],
+        is_dead=is_dead,
+        plant_list=plant_list,
+        headers=['ID', 'Scientific Name', 'Common Name', 'Source', 'Planted', 'Region', 'Sub Region', ''],
         table_id='plants-table'
     ), 200
 
@@ -207,7 +244,7 @@ def delete_plant(plant_id: int):
             filter(TablePlant.plant_id == plant_id).one_or_none()
         if request.method == 'GET':
             return render_template(
-                'pages/confirm.html',
+                'pages/confirm.jinja',
                 confirm_title=f'Confirm delete of ',
                 confirm_focus=f'{plant.species.scientific_name} ({plant.plant_id})',
                 confirm_url=url_for('plant.delete_plant', plant_id=plant_id),
@@ -218,29 +255,3 @@ def delete_plant(plant_id: int):
                 session.delete(plant)
                 flash(f'Plant {plant.species.scientific_name} ({plant.plant_id}) successfully removed', 'success')
         return redirect(url_for('plant.get_all_plants'))
-
-
-@bp_plant.route('/<int:plant_id>/image/add', methods=['GET', 'POST'])
-def add_plant_image(plant_id: int):
-    eng = get_app_eng()
-    form = AddImageForm()
-    with eng.session_mgr() as session:
-        form = populate_image_form(session=session, form=form)
-        if request.method == 'GET':
-            return render_template(
-                'pages/image/add-image.html',
-                form=form,
-                is_edit=False,
-                post_endpoint_url=url_for(request.endpoint, plant_id=plant_id)
-            )
-        elif request.method == 'POST':
-            image_dir = Path(current_app.root_path).joinpath(f'static/images/plant/{plant_id}/')
-
-            image = get_image_data_from_form(request=request, image_dir=image_dir)
-
-            image.plant_key = plant_id
-            session.add(image)
-            session.commit()
-            session.refresh(image)
-            flash(f'Plant image {image.image_id} successfully added', 'success')
-            return redirect(url_for('plant.get_plant', plant_id=plant_id))

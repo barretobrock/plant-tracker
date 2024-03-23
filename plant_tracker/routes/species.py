@@ -1,7 +1,5 @@
-from enum import Enum
 from flask import (
     Blueprint,
-    current_app,
     flash,
     jsonify,
     redirect,
@@ -9,15 +7,9 @@ from flask import (
     request,
     url_for
 )
-from pathlib import Path
 
 from plant_tracker.core.utils import default_if_prop_none
 from plant_tracker.core.geodata import get_boundaries
-from plant_tracker.forms.add_image import (
-    AddImageForm,
-    get_image_data_from_form,
-    populate_image_form
-)
 from plant_tracker.forms.add_species import (
     AddSpeciesForm,
     get_species_data_from_form,
@@ -25,21 +17,15 @@ from plant_tracker.forms.add_species import (
 )
 from plant_tracker.forms.confirm_delete import ConfirmDeleteForm
 from plant_tracker.model import (
-    DurationType,
     LeafRetentionType,
     LightRequirementType,
     SoilMoistureType,
-    TableAlternateNames,
-    TableImage,
-    TablePlantFamily,
-    TablePlantHabit,
     TableSpecies,
     WaterRequirementType
 )
 from plant_tracker.routes.helpers import (
     get_app_logger,
     get_app_eng,
-    get_obj_attr_or_default
 )
 
 bp_species = Blueprint('species', __name__, url_prefix='/species')
@@ -53,7 +39,7 @@ def add_species(species_id: int = None):
         form = populate_species_form(session=session, form=form)
         if request.method == 'GET':
             return render_template(
-                'pages/species/add-species.html',
+                'pages/species/add-species.jinja',
                 form=form,
                 is_edit=False,
                 post_endpoint_url=url_for(request.endpoint)
@@ -75,7 +61,7 @@ def edit_species(species_id: int = None):
         form = populate_species_form(session=session, form=form, species_id=species_id)
         if request.method == 'GET':
             return render_template(
-                'pages/species/add-species.html',
+                'pages/species/add-species.jinja',
                 form=form,
                 is_edit=True,
                 post_endpoint_url=url_for(request.endpoint, species_id=species_id)
@@ -87,14 +73,11 @@ def edit_species(species_id: int = None):
             return redirect(url_for('species.get_species', species_id=species_id))
 
 
-@bp_species.route('/api/<int:species_id>', methods=['GET'])
 @bp_species.route('/<int:species_id>', methods=['GET'])
 def get_species(species_id: int):
     with (get_app_eng().session_mgr() as session):
         species: TableSpecies
         species = session.query(TableSpecies).filter(TableSpecies.species_id == species_id).one_or_none()
-        if '/api/' in request.path:
-            return jsonify(species), 200
         fam_text = 'Unknown' if species.plant_family is None else (f'{species.plant_family.scientific_name} '
                                                                    f'({species.plant_family.common_name})')
         # Here, assign icon classes for data we want to attribute as an icon
@@ -186,7 +169,7 @@ def get_species(species_id: int):
                 })
 
         return render_template(
-            'pages/species/species-info.html',
+            'pages/species/species-info.jinja',
             data=species,
             icon_class_map=icon_class_map,
             basic_info=basic_info,
@@ -214,8 +197,7 @@ def get_all_species():
             data_list.append([
                 {'url': url_for('species.get_species', species_id=sp_id), 'text': sp_id,
                  'icon': 'bi-info-circle'},
-                sp.genus,
-                sp.species,
+                f'{sp.genus} {sp.species}',
                 sp.common_name,
                 fam_name,
                 {'icon': f'bi-{native_icon}', 'val_class': 'icon bool'},
@@ -231,11 +213,11 @@ def get_all_species():
                 ]
             ])
     return render_template(
-        'pages/species/list-species.html',
-        order_list=[3, 'asc'],
+        'pages/species/list-species.jinja',
+        order_list=[2, 'asc'],
         data_rows=data_list,
-        headers=['ID', 'Genus', 'Species', 'Common Name', 'Family', 'Native', 'WF', 'Plants', ''],
-        table_id='species-table'
+        headers=['ID', 'Scientific', 'Common Name', 'Family', 'Native', 'WF', 'Plants', ''],
+        table_id='species-table',
     ), 200
 
 
@@ -249,7 +231,7 @@ def delete_species(species_id: int = None):
             filter(TableSpecies.species_id == species_id).one_or_none()
         if request.method == 'GET':
             return render_template(
-                'pages/confirm.html',
+                'pages/confirm.jinja',
                 confirm_title=f'Confirm delete of ',
                 confirm_focus=species.scientific_name,
                 confirm_url=url_for('species.delete_species', species_id=species_id),
@@ -260,28 +242,3 @@ def delete_species(species_id: int = None):
                 session.delete(species)
                 flash(f'Species {species.scientific_name} successfully removed', 'success')
         return redirect(url_for('species.get_all_species'))
-
-
-@bp_species.route('/<int:species_id>/image/add', methods=['GET', 'POST'])
-def add_species_image(species_id: int):
-    eng = get_app_eng()
-    form = AddImageForm()
-    with eng.session_mgr() as session:
-        form = populate_image_form(session=session, form=form)
-        if request.method == 'GET':
-            return render_template(
-                'pages/image/add-image.html',
-                form=form,
-                is_edit=False,
-                post_endpoint_url=url_for(request.endpoint, species_id=species_id)
-            )
-        elif request.method == 'POST':
-            image_dir = Path(current_app.root_path).joinpath(f'static/images/species/{species_id}/')
-
-            image = get_image_data_from_form(request=request, image_dir=image_dir)
-            image.species_key = species_id
-            session.add(image)
-            session.commit()
-            session.refresh(image)
-            flash(f'Species image {image.image_id} successfully added', 'success')
-            return redirect(url_for('species.get_species', species_id=species_id))

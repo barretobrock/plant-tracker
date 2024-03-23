@@ -30,7 +30,7 @@ def add_watering(plant_id: int = None):
         form = populate_watering_form(session=session, form=form)
         if request.method == 'GET':
             return render_template(
-                'pages/watering/add-watering.html',
+                'pages/watering/add-watering.jinja',
                 form=form,
                 is_edit=False,
                 post_endpoint_url=url_for(request.endpoint, plant_id=plant_id)
@@ -52,7 +52,7 @@ def edit_watering(plant_id: int = None, watering_log_id: int = None):
                                          watering_log_id=watering_log_id)
         if request.method == 'GET':
             return render_template(
-                'pages/watering/add-watering.html',
+                'pages/watering/add-watering.jinja',
                 form=form,
                 is_edit=True,
                 post_endpoint_url=url_for(request.endpoint, plant_id=plant_id,
@@ -77,7 +77,7 @@ def delete_watering(plant_id: int = None, watering_log_id: int = None):
             filter(TableWateringLog.watering_log_id == watering_log_id).one_or_none()
         if request.method == 'GET':
             return render_template(
-                'pages/confirm.html',
+                'pages/confirm.jinja',
                 confirm_title=f'Confirm delete of ',
                 confirm_focus=f"{obs.watering_type} - {obs.watering_date:%F}",
                 confirm_url=url_for('watering.delete_watering',

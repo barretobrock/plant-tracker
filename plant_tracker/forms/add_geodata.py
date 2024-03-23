@@ -32,8 +32,8 @@ from plant_tracker.forms.helper import populate_form
 plant_shape_map = {
     GeodataType.REGION: {'obj': TablePlantRegion, 'pid': TablePlantRegion.geodata_key},
     GeodataType.SUB_REGION: {'obj': TablePlantSubRegion, 'pid': TablePlantSubRegion.geodata_key},
-    GeodataType.PLANT_GROUP: {'obj': TablePlant, 'pid': TablePlant.plant_id},
-    GeodataType.PLANT_POINT: {'obj': TablePlant, 'pid': TablePlant.plant_id},
+    GeodataType.PLANT_GROUP: {'obj': TableGeodata, 'pid': TableGeodata.geodata_id},
+    GeodataType.PLANT_POINT: {'obj': TableGeodata, 'pid': TableGeodata.geodata_id},
     GeodataType.OTHER_POINT: {'obj': TableGeodata, 'pid': TableGeodata.geodata_id},
     GeodataType.OTHER_POLYGON: {'obj': TableGeodata, 'pid': TableGeodata.geodata_id}
 }
@@ -70,7 +70,8 @@ def populate_geodata_form(session, form: AddGeodataForm, geo_type_str: str, obj_
         if pp is None:
             return form
 
-        if geo_type in [GeodataType.OTHER_POINT, GeodataType.OTHER_POLYGON]:
+        if geo_type in [GeodataType.OTHER_POINT, GeodataType.OTHER_POLYGON,
+                        GeodataType.PLANT_POINT, GeodataType.PLANT_GROUP]:
             geodata_obj = pp
         else:
             geodata_obj = pp.geodata

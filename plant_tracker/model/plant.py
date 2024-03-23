@@ -9,12 +9,13 @@ from sqlalchemy import (
     Enum,
     ForeignKey,
     Integer,
+    VARCHAR
 )
 from sqlalchemy.orm import relationship
 
 from .base import Base
 from .species import TableSpecies
-from .maps import TablePlantRegion, TablePlantSubRegion, TablePlantLocation
+from .maps import TablePlantLocation
 
 
 class PlantSourceType(StrEnum):
@@ -44,6 +45,7 @@ class TablePlant(Base):
     maintenance_logs = relationship('TableMaintenanceLog', back_populates='plant')
     watering_logs = relationship('TableWateringLog', back_populates='plant')
     is_dead: bool = Column(Boolean, default=False)
+    notes: str = Column(VARCHAR)
 
     def __repr__(self) -> str:
         return self.build_repr_for_class(self)

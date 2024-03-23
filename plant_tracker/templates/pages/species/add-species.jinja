@@ -1,10 +1,11 @@
-{% import 'macros/form.html' as f %}
-{% extends 'base.html' %}
+{% import 'macros/form.jinja' as f %}
+{% extends 'base.jinja' %}
 {% block head %}
     {{ super() }}
 {% endblock %}
 {% block content %}
     {% set data_rows = [
+        ['existing_species'],
         ['common_name', 'genus', 'species'],
         ['family', 'habit', 'duration'],
         ['is_native', 'is_drought_tolerant', 'is_heat_tolerant', 'is_freeze_tolerant'],

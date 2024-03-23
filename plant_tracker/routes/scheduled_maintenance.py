@@ -31,7 +31,7 @@ def add_scheduled_maintenance(species_id: int = None):
         form = populate_scheduled_maintenance_form(session=session, form=form)
         if request.method == 'GET':
             return render_template(
-                'pages/scheduled-maintenance/add-scheduled-maintenance.html',
+                'pages/scheduled-maintenance/add-scheduled-maintenance.jinja',
                 form=form,
                 is_edit=False,
                 post_endpoint_url=url_for(request.endpoint, species_id=species_id)
@@ -55,7 +55,7 @@ def edit_scheduled_maintenance(species_id: int = None, maintenance_schedule_id: 
                                                    maintenance_schedule_id=maintenance_schedule_id)
         if request.method == 'GET':
             return render_template(
-                'pages/scheduled-maintenance/add-scheduled-maintenance.html',
+                'pages/scheduled-maintenance/add-scheduled-maintenance.jinja',
                 form=form,
                 is_edit=True,
                 post_endpoint_url=url_for(request.endpoint, species_id=species_id,
@@ -80,7 +80,7 @@ def delete_scheduled_maintenance(species_id: int = None, maintenance_schedule_id
             filter(TableScheduledMaintenanceLog.maintenance_schedule_id == maintenance_schedule_id).one_or_none()
         if request.method == 'GET':
             return render_template(
-                'pages/confirm.html',
+                'pages/confirm.jinja',
                 confirm_title=f'Confirm delete of ',
                 confirm_focus=f"{schmaint.maintenance_type} - {schmaint.maintenance_frequency}",
                 confirm_url=url_for('scheduled_maintenance.delete_scheduled_maintenance',

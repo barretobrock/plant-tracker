@@ -1,4 +1,4 @@
-{% macro simple_table(table_id, header_list, data_rows) -%}
+{% macro tablemaker(table_id, header_list, data_rows) -%}
     <table class="table table-sm table-bordered table-striped table-dark" id="{{ table_id }}">
         <thead>
             <tr>
@@ -18,7 +18,7 @@
                         {% elif item is mapping %}
                             {% set item = [item] %}
                         {% elif item is not iterable %}
-                            <td></td>
+                            <td class="f-smol">{{ item }}</td>
                         {% endif %}
 
                         {% if item is iterable and item is not string %}
@@ -37,6 +37,8 @@
                                         </a>
                                     {% elif val.icon %}
                                         <i class="{{ val_class }} {{ icon }}">{{ text }}</i>
+                                    {% elif val.image_src %}
+                                        <img src="{{ val.image_src }}" alt="image">
                                     {% else %}
                                         <span class="{{ val_class }}">{{ text }}</span>
                                     {% endif %}
@@ -52,13 +54,28 @@
 {% macro sortable_table(table_id, headers, data_rows, order_list) -%}
 
     {% if not order_list %}
-        {% set order_list = [0, "asc"] %}
+        {% set order_list = [[0, "asc"]] %}
     {% endif %}
-    {% set col, direction = order_list %}
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs5/dt-2.0.1/datatables.min.css"/>
     <script type="text/javascript" src="https://cdn.datatables.net/v/bs5/dt-2.0.1/datatables.min.js"></script>
     <script>
+        let col_conf = {
+            'plants-table': [
+                {'width': 50, 'targets': [0, 3, 4, -1]},
+                {'width': 150, 'targets': [5, 6]},
+                {'width': 200, 'targets': [1, 2]},
 
+            ],
+            'species-table': [
+                {'width': 50, 'targets': [0, -1, -2, -3, -4]},
+                {'width': 250, 'targets': [1, 2]},
+            ],
+            'families-table': [
+                {'width': 50, 'targets': [0, -1]},
+                {'width': 100, targets: 3},
+                {'width': 300, 'targets': [1, 2]},
+            ]
+        };
         let tbl_id_name = '#{{ table_id }}';
         $(document).ready(function () {
             $(tbl_id_name).DataTable({
@@ -79,20 +96,28 @@
                         }
                     }
                 },
-                columnDefs: [{{ column_config }}],
+                columnDefs: col_conf['{{ table_id }}'],
+                autoWidth: true,
                 scrollX: true,
                 info: true,
                 paging: true,
                 lengthChange: true,
                 lengthMenu: [25, 50, 100, 200],
                 searching: true,
-                order: [[{{ col }}, '{{ direction }}']],
+                order: {{ order_list }},
             });
         });
     </script>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/table.css') }}">
     <div class="mt-5 mb-5">
-        <h3>{{ caller() }}</h3>
-        <div>{{ simple_table(table_id, headers, data_rows) }}</div>
+        <h4>{{ caller() }}</h4>
+        <div>{{ tablemaker(table_id, headers, data_rows) }}</div>
     </div>
 {%- endmacro %}
+
+{% macro simple_table(table_id, headers, data_rows) -%}
+    <div class="mt-5 mb-5">
+        <h4>{{ caller() }}</h4>
+        <div>{{ tablemaker(table_id, headers, data_rows) }}</div>
+    </div>
+{% endmacro %}

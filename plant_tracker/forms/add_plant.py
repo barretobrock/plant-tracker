@@ -4,6 +4,7 @@ from flask_wtf import FlaskForm
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
 from wtforms import (
+    BooleanField,
     DateField,
     SelectField,
     StringField,
@@ -50,6 +51,8 @@ plant_attr_map = {
         'empty_var': 'unknown',
         'choices': bool_with_unknown_list
     },
+    'is_dead': 'is_dead',
+    'notes': 'notes'
 }
 
 
@@ -73,11 +76,13 @@ class AddPlantForm(FlaskForm):
         default='None'
     )
 
+    is_dead = BooleanField('Mark as dead', default='unchecked')
     is_drip_irrigated = SelectField(label='Drip Irrigated?', choices=bool_with_unknown_list, default='unknown')
     is_in_container = SelectField(label='In Container?', choices=bool_with_unknown_list, default='unknown')
 
     shape_type = SelectField(label='Shape Type', choices=['polygon', 'point'], default='point')
     geodata = TextAreaField(label='GeoData')
+    notes = TextAreaField(label='Notes')
 
     submit = SubmitField('Submit')
 

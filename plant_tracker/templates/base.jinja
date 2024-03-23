@@ -37,7 +37,7 @@
                 <a class="navbar-brand" href="{{ url_for('main.index') }}">
                     <img class="nav-logo" src="{{ url_for('static', filename='images/favicon.svg') }}" alt="plant logo">
                 </a>
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNav">
@@ -46,15 +46,17 @@
                         'Families': 'family.get_all_families',
                         'Species': 'species.get_all_species',
                         'Plants': 'plant.get_all_plants',
-                        'Map': {
+                        'Map Items': 'geodata.get_all',
+                        'Map': 'geodata.get_map',
+                    } -%}
+
+                    {% set nav_right = {
+                        '+ Map': {
                             '+ Other Point': {'path': 'geodata.add_geodata', 'geo_type': 'other_point'},
                             '+ Other Group': {'path': 'geodata.add_geodata', 'geo_type': 'other_polygon'},
                             '+ SubRegion': {'path': 'geodata.add_geodata', 'geo_type': 'sub_region'},
                             '+ Region': {'path': 'geodata.add_geodata', 'geo_type': 'region'}
-                        }
-                    } -%}
-
-                    {% set nav_right = {
+                        },
                         '+ Family': 'family.add_family',
                         '+ Species': 'species.add_species',
                         '+ Plant': 'plant.add_plant',
@@ -62,12 +64,12 @@
                     <ul class="navbar-nav me-auto">
                         {% for name, details in nav_left.items() %}
                             {% if details is string %}
-<!--                                {# This is a top-level nav item #}-->
+                                {# This is a top-level nav item #}
                                 <li class="nav-item">
                                     <a class="nav-link {{ 'active' if request.endpoint == details }}" href="{{ url_for(details) }}">{{ name }}</a>
                                 </li>
                             {% elif details is mapping %}
-<!--                                {# This is a dropdown nav item #}-->
+                                {# This is a dropdown nav item #}
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">{{ name }}</a>
                                     <div class="dropdown-menu">
@@ -89,6 +91,20 @@
                         {% for name, details in nav_right.items() %}
                             {% if details is string %}
                                 <a class="btn btn-primary btn-sm me-2" role="button" aria-pressed="true" href="{{ url_for(details) }}">{{ name }}</a>
+                            {% elif details is mapping %}
+                                <li class="nav-item dropdown">
+                                    <a class="dropdown-toggle btn btn-sm btn-primary me-2" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">{{ name }}</a>
+                                    <div class="dropdown-menu">
+                                        {% for item_name, item_path in details.items() %}
+                                            {% if item_path is mapping %}
+                                                {% set ipath = item_path.pop('path') %}
+                                                <a class="dropdown-item bs-dark" href="{{ url_for(ipath, **item_path) }}">{{ item_name }}</a>
+                                            {% else %}
+                                                <a class="dropdown-item bs-dark" href="{{ url_for(item_path) }}">{{ item_name }}</a>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </li>
                             {% endif %}
                         {% endfor %}
                     </div>
@@ -114,8 +130,8 @@
         </div>
     </main>
     <footer class="footer mt-auto py-2 bg-dark">
-      <div class="container">
-          <span class="text-muted">Plant Tracker v{{ config['VERSION'] }}</span>
+      <div>
+          <span class="text-muted float-start">Plant Tracker v{{ config['VERSION'] }}</span>
       </div>
     </footer>
   </body>

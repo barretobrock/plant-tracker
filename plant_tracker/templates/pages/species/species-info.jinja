@@ -1,6 +1,7 @@
 {% import 'macros/table_builder.jinja' as f %}
+{% import 'macros/image_carousel.jinja' as i %}
 {% import 'macros/svg.jinja' as s %}
-{% extends 'base.html' %}
+{% extends 'base.jinja' %}
 {% block head %}
     {{ super() }}
 {% endblock %}
@@ -24,14 +25,26 @@
                     {% for item_name, item_dict in icon_class_map.items() %}
                         <i class="icon {{ item_dict.map[item_dict.value] }} {{ item_dict.addl_class}}" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ item_name }} - {{ item_dict.value }}"></i>
                     {% endfor %}
+                    {% if data.usda_symbol %}
+                        <span class="float-end">
+                            {% if data.is_native or data.is_native is none %}
+                                <a type="button" class="btn btn-sm btn-outline-info position-relative" href="https://www.wildflower.org/plants/result.php?id_plant={{ data.usda_symbol }}" target="_blank">WF</a>
+                            {% endif %}
+                            <a type="button" class="btn btn-sm btn-outline-info position-relative" href="https://plants.usda.gov/home/plantProfile?symbol={{ data.usda_symbol }}" target="_blank">USDA</a>
+                        </span>
+                    {% endif %}
                 </div>
                 <div class="species-subtitle">({{data.common_name}})</div>
+
             </div>
         </div>
     </div>
     <div class="row">
         <div class="col my-2">
             <div class="float-start">
+                <a type="button" class="btn btn-sm btn-outline-success position-relative" href="/plant/by_species/{{ data.species_id }}/add">
+                    <i class="bi-plus-circle-fill"></i>
+                </a>
                 <a type="button" class="btn btn-sm btn-outline-success position-relative" href="/plant/by_species/{{ data.species_id }}/all">
                     Plants
                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success">
@@ -41,7 +54,7 @@
                 </a>
             </div>
             <div class="float-end">
-                <a type="button" class="btn btn-outline-primary btn-sm" href="/species/{{ data.species_id }}/edit"><i class="bi-pencil"></i> Edit</a>
+                <a type="button" class="btn btn-outline-warning btn-sm" href="/species/{{ data.species_id }}/edit"><i class="bi-pencil"></i> Edit</a>
                 <a type="button" class="btn btn-outline-danger btn-sm" href="/species/{{ data.species_id }}/delete"><i class="bi-trash"></i> Delete</a>
             </div>
         </div>
@@ -62,7 +75,7 @@
                 <h5 class="card-title">
                     Alternate Names
                     <span class="float-end">
-                        <a type="button" href="/species/{{data.species_id}}/altname/add" class="btn btn-outline-success btn-sm"><i class="bi-plus"></i>Add Name</a>
+                        <a type="button" href="/species/{{data.species_id}}/altname/add" class="btn btn-outline-success btn-sm"><i class="bi-plus"></i></a>
                     </span>
                 </h5>
 
@@ -104,35 +117,8 @@
         </div>
         <div class="col">
             <div class="card-body shadow p-3 mb-5 rounded">
-                <h4 class="card-title">
-                    Photos
-                    <span class="float-end">
-                        <a type="button" href="/species/{{data.species_id}}/image/add" class="btn btn-outline-success btn-sm"><i class="bi-plus-circle-fill"></i></a>
-                    </span>
-                </h4>
-                <div id="plant-pic-carousel" class="carousel slide" data-bs-ride="carousel">
-                    <div class="carousel-inner">
-                        {% if data.images %}
-                            {% for img in data.images %}
-                                <div class="carousel-item {{'active' if loop.first else ''}}">
-                                    <img src="{{ img.image_path }}" class="d-block w-100" alt="plant-pic">
-                                </div>
-                            {% endfor %}
-                        {% else %}
-                            <div class="carousel-item">
-                                <img src="/images/winecup.jpg" class="d-block w-100" alt="plant-pic">
-                            </div>
-                        {% endif %}
-                    </div>
-                    <button class="carousel-control-prev" type="button" data-bs-target="#plant-pic-carousel" data-bs-slide="prev">
-                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Previous</span>
-                    </button>
-                    <button class="carousel-control-next" type="button" data-bs-target="#plant-pic-carousel" data-bs-slide="next">
-                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Next</span>
-                    </button>
-                </div>
+                {% call i.image_carousel('species-pic-carousel', data, is_plant=False) %}
+                {% endcall %}
             </div>
         </div>
 
@@ -146,25 +132,31 @@
                         <a type="button" href="/species/{{data.species_id}}/scheduled_maintenance/add" class="btn btn-outline-success btn-sm"><i class="bi-plus-circle-fill"></i></a>
                     </span>
                 </h4>
-                {{ f.simple_table('waALKJes', scheduled_maint_info.headers, scheduled_maint_info.rowdata) }}
-            </div>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col">
-            <div class="card-body shadow p-3 mb-5 rounded">
-                <h4 class="card-title">Additional Info</h4>
-                {% if data.care_notes %}
-                    <h5>Care Notes</h5>
-                    <p class="card-text">{{ data.care_notes }}</p>
-                {% endif %}
-                {% if data.propagation_notes %}
-                    <h5>Propagation Notes</h5>
-                    <p class="card-text">{{ data.propagation_notes }}</p>
+                {% if scheduled_maint_info.rowdata|length > 0 %}
+                    {% call f.simple_table('waALKJes', scheduled_maint_info.headers, scheduled_maint_info.rowdata) %}
+
+                    {% endcall %}
                 {% endif %}
             </div>
         </div>
     </div>
+    {% if data.care_notes or data.propagation_notes %}
+        <div class="row">
+            <div class="col">
+                <div class="card-body shadow p-3 mb-5 rounded">
+                    <h4 class="card-title">Additional Info</h4>
+                    {% if data.care_notes %}
+                        <h5>Care Notes</h5>
+                        <p class="card-text">{{ data.care_notes }}</p>
+                    {% endif %}
+                    {% if data.propagation_notes %}
+                        <h5>Propagation Notes</h5>
+                        <p class="card-text">{{ data.propagation_notes }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
     <div class="row">
         <div class="col">
             {% if map_points %}

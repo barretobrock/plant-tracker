@@ -1,6 +1,7 @@
 {% import 'macros/table_builder.jinja' as f %}
+{% import 'macros/image_carousel.jinja' as i %}
 {% import 'macros/svg.jinja' as s %}
-{% extends 'base.html' %}
+{% extends 'base.jinja' %}
 {% block head %}
     {{ super() }}
 {% endblock %}
@@ -54,31 +55,8 @@
         </div>
         <div class="col">
             <div class="card-body shadow p-3 mb-5 rounded">
-                <h4 class="card-title">
-                    Plant Photos
-                    <span class="float-end">
-                        <a type="button" href="/plant/{{data.plant_id}}/image/add" class="btn btn-outline-success btn-sm"><i class="bi-plus-circle-fill"></i></a>
-                    </span>
-                </h4>
-                <div id="plant-pic-carousel" class="carousel slide" data-bs-slide="carousel">
-                    <div class="carousel-inner">
-                        {% if data.images %}
-                            {% for img in data.images %}
-                                <div class="carousel-item active">
-                                    <img src="{{ img.image_path }}" class="d-block w-100" alt="plant-pic">
-                                </div>
-                            {% endfor %}
-                        {% endif %}
-                    </div>
-                    <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="prev">
-                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Previous</span>
-                    </button>
-                    <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="next">
-                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Next</span>
-                    </button>
-                </div>
+                {% call i.image_carousel('plant-pic-carousel', data, is_plant=True) %}
+                {% endcall %}
             </div>
         </div>
     </div>
@@ -91,7 +69,10 @@
                         <a type="button" href="/plant/{{data.plant_id}}/observation/add" class="btn btn-outline-success btn-sm"><i class="bi-plus-circle-fill"></i></a>
                     </span>
                 </h4>
-                {{ f.simple_table('waALadKJes', observation_info.headers, observation_info.rowdata) }}
+                {% if observation_info.rowdata %}
+                    {% call f.simple_table('waALadKJes', observation_info.headers, observation_info.rowdata) %}
+                    {% endcall %}
+                {% endif %}
             </div>
         </div>
     </div>
@@ -104,7 +85,10 @@
                         <a type="button" href="/plant/{{data.plant_id}}/maintenance/add" class="btn btn-outline-success btn-sm"><i class="bi-plus-circle-fill"></i></a>
                     </span>
                 </h4>
-                {{ f.simple_table('waALadKAlkeAJes', maintenance_info.headers, maintenance_info.rowdata) }}
+                {% if maintenance_info.rowdata %}
+                    {% call f.simple_table('waALadKAlkeAJes', maintenance_info.headers, maintenance_info.rowdata) %}
+                    {% endcall %}
+                {% endif %}
             </div>
         </div>
     </div>
@@ -117,10 +101,23 @@
                         <a type="button" href="/plant/{{data.plant_id}}/watering/add" class="btn btn-outline-success btn-sm"><i class="bi-plus-circle-fill"></i></a>
                     </span>
                 </h4>
-                {{ f.simple_table('waALadKAlkeAJes', watering_info.headers, watering_info.rowdata) }}
+                {% if watering_info.rowdata %}
+                    {% call f.simple_table('waALadKAlkeAJes', watering_info.headers, watering_info.rowdata) %}
+                    {% endcall %}
+                {% endif %}
             </div>
         </div>
     </div>
+    {% if data.notes %}
+        <div class="row">
+            <div class="col">
+                <div class="card-body shadow p-3 mb-5 rounded">
+                    <h4 class="card-title">Notes</h4>
+                    <p class="card-text">{{ data.notes }}</p>
+                </div>
+            </div>
+        </div>
+    {% endif %}
     <div class="row">
         <div class="col">
             {% if map_points %}

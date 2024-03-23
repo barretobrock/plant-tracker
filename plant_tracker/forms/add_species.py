@@ -96,6 +96,7 @@ species_attr_map = {
 class AddSpeciesForm(FlaskForm):
     """Add species form"""
 
+    existing_species = DataListField('Search Existing Species')
     common_name = StringField(label='Common name', validators=[DataRequired()])
     genus = StringField(label='Genus')
     species = StringField(label='Species')
@@ -144,7 +145,10 @@ def populate_species_form(session, form: AddSpeciesForm, species_id: int = None)
             session.query(TablePlantFamily).order_by(TablePlantFamily.scientific_name).all()]
     habits = [x.plant_habit for x in
               session.query(TablePlantHabit).order_by(TablePlantHabit.plant_habit).all()]
+    existing_species = [f'#{x.species_id} - {x.common_name} ({x.scientific_name})' for x in
+                        session.query(TableSpecies).all()]
     form.family.datalist_entries = list_with_default(fams)
+    form.existing_species.datalist_entries = list_with_default(existing_species)
     form.habit.choices = list_with_default(habits)
     if species_id is not None:
         species: TableSpecies

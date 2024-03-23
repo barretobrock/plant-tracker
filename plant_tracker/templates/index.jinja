@@ -1,5 +1,43 @@
-{% extends 'base.html' %}
+{% import 'macros/table_builder.jinja' as f %}
+{% extends 'base.jinja' %}
 
 {% block content %}
     <h2 class="mt-5">Plant Tracker</h2>
+    <div class="row">
+        <div class="col">
+            <div class="card-body shadow p-3 mb-5 rounded">
+                {% call f.simple_table('plant-habit-stat', habit_data.headers, habit_data.rows) %}
+                    Species/Plants by Plant Habit
+                {% endcall %}
+            </div>
+        </div>
+        <div class="col">
+            <div class="card-body shadow mb-1 rounded">
+                {% call f.simple_table('plant-source-stat', source_data.headers, source_data.rows) %}
+                    Species/Plants by Source
+                {% endcall %}
+                {% call f.simple_table('plant-duration-stat', duration_data.headers, duration_data.rows) %}
+                    Species/Plants by Duration
+                {% endcall %}
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <div class="card-body shadow p-3 mb-5 rounded">
+                {% call f.simple_table('plant-zone-stat', zone_data.headers, zone_data.rows) %}
+                    Irrigated Plants by Zone
+                {% endcall %}
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <div class="card-body shadow p-3 mb-5 rounded">
+                <h4 class="card-title">Admin</h4>
+                <a type="button" href="/image/all" class="btn btn-outline-secondary btn-sm">All Images</a>
+                <a type="button" href="/plant/dead" class="btn btn-outline-secondary btn-sm">Dead Plants</a>
+            </div>
+        </div>
+    </div>
 {% endblock %}
