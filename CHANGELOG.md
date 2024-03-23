@@ -15,6 +15,21 @@ _Note: 'Unreleased' section below is used for untagged changes that will be issu
 #### Security
 __BEGIN-CHANGELOG__
  
+### [0.0.6] - 2024-03-23
+#### Added
+ - Map view of all items
+ - Map list of all non-plant items
+ - Irrigated plants now get a sign rendered on map
+#### Changed
+ - Plant & species image carousels are now unified
+ - Refactor template files to `.jinja` extension for better syntax highlighting in development
+#### Deprecated
+#### Removed
+ - Support for plant map objects in map list (this should only be accessed through plant object) 
+#### Fixed
+ - Plant geodata map object input now works
+#### Security
+ 
 ### [0.0.5] - 2024-03-18
 #### Changed
  - Logic for determining location is now handled under one function for all geodata
