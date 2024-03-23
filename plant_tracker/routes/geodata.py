@@ -6,6 +6,7 @@ from flask import (
     request,
     url_for
 )
+from sqlalchemy.sql import not_
 
 from plant_tracker.core.geodata import get_all_geodata, get_boundaries
 from plant_tracker.forms.add_geodata import (
@@ -36,7 +37,7 @@ def add_geodata(geo_type: str, plant_id: int = None):
         form = populate_geodata_form(session=session, form=form, geo_type_str=geo_type)
         if request.method == 'GET':
             return render_template(
-                'pages/geodata/add-geodata.html',
+                'pages/geodata/add-geodata.jinja',
                 form=form,
                 is_edit=False,
                 map_points=get_all_geodata(session=session),
@@ -64,7 +65,7 @@ def edit_geodata(geo_type: str, obj_id: int = None):
         form = populate_geodata_form(session=session, form=form, geo_type_str=geo_type, obj_id=obj_id)
         if request.method == 'GET':
             return render_template(
-                'pages/geodata/add-geodata.html',
+                'pages/geodata/add-geodata.jinja',
                 form=form,
                 is_edit=True,
                 map_points=get_all_geodata(session=session, focus_ids=[] if obj_id is None else [obj_id]),
@@ -97,7 +98,7 @@ def delete_geodata(geo_type: str, obj_id: int = None):
             pp = session.query(pp_obj).filter(pp_obj.geodata_key == obj_id).one_or_none()
         if request.method == 'GET':
             return render_template(
-                'pages/confirm.html',
+                'pages/confirm.jinja',
                 confirm_title=f'Confirm delete of ',
                 confirm_focus=pp,
                 confirm_url=url_for('geodata.delete_geodata', geo_type=geo_type, obj_id=obj_id),
@@ -120,7 +121,9 @@ def get_all(geo_type: str = None):
         if geo_type:
             geos = session.query(TableGeodata).filter(TableGeodata.geodata_type == GeodataType(geo_type)).all()
         else:
-            geos = session.query(TableGeodata).all()
+            geos = session.query(TableGeodata).filter(
+                not_(TableGeodata.geodata_type.in_([GeodataType.PLANT_GROUP, GeodataType.PLANT_POINT]))
+            ).all()
         data_list = []
         geo: TableGeodata
         for geo in geos:
@@ -138,9 +141,19 @@ def get_all(geo_type: str = None):
                 ]
             ])
     return render_template(
-        'pages/geodata/list-geodata.html',
+        'pages/geodata/list-geodata.jinja',
         order_list=[2, 'asc'],
         data_rows=data_list,
         headers=['ID', 'Geodata Name', 'Type', 'Is Polygon', ''],
         table_id='geodata-table'
     ), 200
+
+
+@bp_geodata.route('/map', methods=['GET', 'POST'])
+def get_map():
+    eng = get_app_eng()
+    with eng.session_mgr() as session:
+        return render_template(
+            'pages/geodata/map.jinja',
+            map_points=get_all_geodata(session=session),
+        )

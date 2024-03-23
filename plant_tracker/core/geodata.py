@@ -7,11 +7,15 @@ from typing import (
 
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
-from sqlalchemy.sql import not_
+from sqlalchemy.sql import (
+    and_,
+    not_
+)
 
 from plant_tracker.model import (
     GeodataType,
     TableGeodata,
+    TablePlant,
     TablePlantLocation,
     TablePlantRegion,
     TablePlantSubRegion
@@ -51,7 +55,7 @@ class GeodataPoint:
             'x': cls.x,
             'y': cls.y,
             'r': cls.r,
-            'class': 'focus' if is_focus else cls.geo_type.value
+            'class': 'focus original' if is_focus else cls.geo_type.value
         }
 
 
@@ -89,7 +93,7 @@ class GeodataPolygon:
             'name': cls.name,
             'type': cls.geo_type.value,
             'points': cls.to_string(),
-            'class': 'focus' if is_focus else cls.geo_type.value
+            'class': 'focus original' if is_focus else cls.geo_type.value
         }
 
 
@@ -99,12 +103,22 @@ def get_all_geodata(session, focus_ids: List[int] = None) -> List[Dict]:
         focus_ids = []
     items = []
     geodatas = session.query(TableGeodata).all()
+    irr_plant_geoids = [
+        x.geodata_id for x in
+        session.query(TableGeodata)
+        .join(TablePlantLocation, TablePlantLocation.geodata_key == TableGeodata.geodata_id)
+        .join(TablePlant, TablePlantLocation.plant_location_id == TablePlant.plant_location_key)
+        .filter(and_(not_(TablePlant.is_dead), TablePlant.is_drip_irrigated)).all()
+    ]
     for gd in geodatas:
         if gd.geodata_type in ([GeodataType.PLANT_POINT, GeodataType.OTHER_POINT]):
             data = GeodataPoint.from_string(gd.data, name=gd.name, geo_type=gd.geodata_type)
         else:
             data = GeodataPolygon.from_string(gd.data, name=gd.name, geo_type=gd.geodata_type)
-        items.append(data.to_json(is_focus=gd.geodata_id in focus_ids))
+        data_dict = data.to_json(is_focus=gd.geodata_id in focus_ids)
+        if gd.geodata_type in [GeodataType.PLANT_GROUP, GeodataType.PLANT_POINT]:
+            data_dict['irrigated'] = gd.geodata_id in irr_plant_geoids
+        items.append(data_dict)
     return items
 
 

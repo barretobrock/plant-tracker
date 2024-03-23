@@ -1,0 +1,9 @@
+{% import 'macros/svg.jinja' as s %}
+{% extends 'base.jinja' %}
+{% block head %}
+    {{ super() }}
+{% endblock %}
+{% block content %}
+    {% call s.render_static_map(map_points) %}
+    {% endcall %}
+{% endblock %}
