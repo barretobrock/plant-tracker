@@ -42,7 +42,7 @@ class AddMaintenanceForm(FlaskForm):
     maintenance_date = DateField(
         label='Maintenance Date',
         validators=[DataRequired()],
-        default=datetime.today().date(),
+        default=datetime.today,
         format='%Y-%m-%d'
     )
     notes = TextAreaField(label='Maintenance Notes')

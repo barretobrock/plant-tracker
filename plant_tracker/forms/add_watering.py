@@ -28,7 +28,7 @@ class AddWateringForm(FlaskForm):
     watering_date = DateField(
         label='Watering Date',
         validators=[DataRequired()],
-        default=datetime.today().date(),
+        default=datetime.today,
         format='%Y-%m-%d'
     )
     notes = TextAreaField(label='Watering Notes')

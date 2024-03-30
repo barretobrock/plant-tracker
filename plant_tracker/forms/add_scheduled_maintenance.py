@@ -51,13 +51,13 @@ class AddScheduledMaintenanceForm(FlaskForm):
     maintenance_period_start = DateField(
         label='Maintenance Period Start',
         validators=[DataRequired()],
-        default=datetime.today().date(),
+        default=datetime.today,
         format='%Y-%m-%d'
     )
     maintenance_period_end = DateField(
         label='Maintenance Period End',
         validators=[DataRequired()],
-        default=datetime.today().date(),
+        default=datetime.today,
         format='%Y-%m-%d'
     )
     maintenance_frequency = SelectField(

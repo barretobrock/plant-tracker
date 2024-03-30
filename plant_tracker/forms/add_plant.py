@@ -66,7 +66,7 @@ class AddPlantForm(FlaskForm):
     date_planted = DateField(
         label='Planted Date',
         validators=[DataRequired()],
-        default=datetime.today().date(),
+        default=datetime.today,
         format='%Y-%m-%d'
     )
     plant_source = SelectField(
@@ -76,7 +76,7 @@ class AddPlantForm(FlaskForm):
         default='None'
     )
 
-    is_dead = BooleanField('Mark as dead', default='unchecked')
+    is_dead = BooleanField('Mark as dead', default=False)
     is_drip_irrigated = SelectField(label='Drip Irrigated?', choices=bool_with_unknown_list, default='unknown')
     is_in_container = SelectField(label='In Container?', choices=bool_with_unknown_list, default='unknown')
 

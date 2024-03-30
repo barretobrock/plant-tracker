@@ -46,7 +46,7 @@ class AddObservationForm(FlaskForm):
     observation_date = DateField(
         label='Observation Date',
         validators=[DataRequired()],
-        default=datetime.today().date(),
+        default=datetime.today,
         format='%Y-%m-%d'
     )
     plant_rating = RadioField(
