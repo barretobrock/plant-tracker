@@ -13,9 +13,9 @@
     padding-top: 45px !important;
 }
 
-.form-textarea,
+.form-floating > .form-textarea,
 .form-radio {
-    height: 150px !important;
+    height: auto;
 }
 
 ul.form-radio {
