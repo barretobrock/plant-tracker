@@ -155,5 +155,5 @@ def get_map():
     with eng.session_mgr() as session:
         return render_template(
             'pages/geodata/map.jinja',
-            map_points=get_all_geodata(session=session),
+            map_points_dict=get_all_geodata(session=session),
         )

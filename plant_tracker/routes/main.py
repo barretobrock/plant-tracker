@@ -5,7 +5,6 @@ from flask import (
     render_template
 )
 import pandas as pd
-from sqlalchemy.sql import distinct, func
 
 from plant_tracker.model import (
     TablePlant,
@@ -27,60 +26,40 @@ bp_main = Blueprint('main', __name__)
 def index():
     eng = get_app_eng()
     with eng.session_mgr() as session:
-        habits = session.query(
-            TablePlantHabit.plant_habit,
-            func.count(distinct(TableSpecies.species_id)),
-            func.count(distinct(TablePlant.plant_id))
-        )\
-            .join(TableSpecies, TablePlantHabit.plant_habit_id == TableSpecies.habit_key)\
-            .join(TablePlant, TableSpecies.species_id == TablePlant.species_key)\
-            .group_by(TablePlantHabit.plant_habit).all()
+        species_df = pd.read_sql(session.query(TableSpecies, TablePlantHabit.plant_habit).outerjoin(TablePlantHabit, TableSpecies.habit_key == TablePlantHabit.plant_habit_id).statement, session.connection())
+        plants_df = pd.read_sql(session.query(TablePlant).statement, session.connection())
+        mega_df = pd.merge(species_df, plants_df, left_on='species_id', right_on='species_key', how='left')
 
-        sources = session.query(
-            TablePlant.plant_source,
-            func.count(distinct(TableSpecies.species_id)),
-            func.count(distinct(TablePlant.plant_id))
-        ) \
-            .join(TableSpecies, TablePlant.species_key == TableSpecies.species_id) \
-            .group_by(TablePlant.plant_source).all()
+        habits = mega_df[['plant_habit', 'species_id', 'plant_id']].groupby('plant_habit').agg(
+            {'species_id': pd.Series.nunique, 'plant_id': pd.Series.nunique}
+        )
 
-        durations = session.query(
-            TableSpecies.duration,
-            func.count(distinct(TableSpecies.species_id)),
-            func.count(distinct(TablePlant.plant_id))
-        ) \
-            .join(TablePlant, TablePlant.species_key == TableSpecies.species_id) \
-            .group_by(TableSpecies.duration).all()
-        zones = session.query(
-            TablePlantSubRegion.sub_region_name,
-            TablePlant.is_drip_irrigated,
-            func.count(distinct(TablePlant.plant_id))
-        ) \
-            .join(TablePlantLocation, TablePlantLocation.sub_region_key == TablePlantSubRegion.sub_region_id) \
-            .join(TablePlant, TablePlant.plant_location_key == TablePlantLocation.plant_location_id)\
-            .group_by(
-                TablePlantSubRegion.sub_region_name,
-                TablePlant.is_drip_irrigated
-            ).all()
+        sources = mega_df[['plant_source', 'species_id', 'plant_id']].groupby('plant_source').agg(
+            {'species_id': pd.Series.nunique, 'plant_id': pd.Series.nunique}
+        )
+
+        durations = mega_df[['duration', 'species_id', 'plant_id']].groupby('duration').agg(
+            {'species_id': pd.Series.nunique, 'plant_id': pd.Series.nunique}
+        )
 
     return render_template(
         'index.jinja',
         habit_data={
             'headers': ['Habit', 'Species', 'Plants'],
-            'rows': [[*x] for x in habits]
+            'rows': [[x[0], *x[1].to_list()] for x in habits.iterrows()]
         },
         source_data={
             'headers': ['Source', 'Species', 'Plants'],
-            'rows': [[*x] for x in sources]
+            'rows':  [[x[0], *x[1].to_list()] for x in sources.iterrows()]
         },
         duration_data={
             'headers': ['Duration', 'Species', 'Plants'],
-            'rows': [[*x] for x in durations]
+            'rows':  [[x[0], *x[1].to_list()] for x in durations.iterrows()]
         },
-        zone_data={
-            'headers': ['Zone', 'Is Irrigated', 'Plants'],
-            'rows': [[*x] for x in zones]
-        }
+        # zone_data={
+        #     'headers': ['Zone', 'Is Irrigated', 'Plants'],
+        #     'rows': [[*x] for x in zones]
+        # }
     )
 
 
