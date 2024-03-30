@@ -40,8 +40,8 @@
 
                             <!--Here we instantiate the field item-->
                             {% if form[item].type == 'DataListField' %}
-                                {{ form[item](list="id_datalist", class_=inputclass) }}
-                                <datalist id="id_datalist">
+                                {{ form[item](list="datalist_" ~ form[item].id, class_=inputclass) }}
+                                <datalist id="datalist_{{ form[item].id }}">
                                     {% for entry in form[item].datalist_entries %}
                                         <option value="{{ entry }}">
                                     {% endfor %}
@@ -50,7 +50,6 @@
                                 <script>
                                     document.onpaste = function (event) {
                                         var items = (event.clipboardData || event.originalEvent.clipboardData).items;
-                                        console.log(JSON.stringify(items));  // this yields MIME types
                                         for (index in items) {
                                             var item = items[index];
                                             if (item.kind === 'file') {
@@ -58,7 +57,6 @@
                                                 var reader = new FileReader();
                                                 reader.onload = function (event) {
                                                     var data_url_elem = document.getElementById('image_data_url');
-                                                    console.log(event.target.result)
                                                     data_url_elem.value = event.target.result;
                                                     // create an image viewer
                                                     var data_row = data_url_elem.parentElement.parentElement.parentElement;
@@ -69,12 +67,13 @@
                                                     var image_info = document.createElement('div');
                                                     var image = document.createElement('img');
                                                     image.setAttribute('src', event.target.result)
-                                                    console.log(image);
+                                                    image.setAttribute('id', 'pasted-image')
+                                                    image_info.setAttribute('id', 'pasted-image-info')
                                                     image_col.appendChild(image_info)
                                                     image_col.appendChild(image);
                                                     image_row.appendChild(image_col)
                                                     data_row.parentNode.insertBefore(image_col, data_row.nextSibling);
-                                                    image_info.innerText = 'Image details: ' + image.naturalHeight + 'x' + image.naturalWidth + ' Ratio: ' + image.naturalHeight / image.naturalWidth;
+                                                    document.getElementById('pasted-image-info').textContent = 'Image details: ' + image.naturalHeight + 'x' + image.naturalWidth + ' Ratio: ' + image.naturalHeight / image.naturalWidth;
                                                 };  // data url
                                                 reader.readAsDataURL(blob);
                                             }
