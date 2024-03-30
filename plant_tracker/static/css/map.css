@@ -1,3 +1,8 @@
+.scrollable-map {
+    height: 700px;
+    overflow-y: scroll;
+}
+
 #coords-div {
     position: fixed;
     top: 4em;
@@ -21,6 +26,14 @@ circle.focus {
     fill-opacity: 0.3;
 }
 
+circle.plant_point {
+    transition: 0.3s;
+}
+circle.plant_point:hover {
+    filter: brightness(50);
+    box-shadow: #858585;
+}
+
 .region,
 .sub_region,
 .other_point,
@@ -40,8 +53,9 @@ circle.focus {
 }
 
 .sub_region {
-    fill: grey;
-    stroke: grey;
+    fill: yellow;
+    stroke: lightgreen;
+    fill-opacity: 0.05;
 }
 .other_polygon,
 .other_point {

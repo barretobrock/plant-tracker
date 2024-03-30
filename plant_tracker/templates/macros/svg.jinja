@@ -3,34 +3,46 @@
     <circle cx="{{ x + r }}" cy="{{ y - r }}" r="{{ r }}" class="irrigation"></circle>
 {% endmacro %}
 
-{% macro map_items_builder(geodata_list) -%}
+{% macro map_items_builder(geodata_dict) -%}
     {{ caller() }}
-    {% if geodata_list is none %}
-        {% set geodata_list = [] %}
+    {% if geodata_dict is none %}
+        {% set geodata_dict = {} %}
     {% endif %}
-    {% for g in geodata_list %}
-        {% if g.type.endswith('_point') %}
-            {# build circle#}
-            <circle cx="{{ g.x }}" cy="{{ g.y }}" r="{{ g.r }}" class="{{ g.class }}">
-                <title>{{ g.name }}</title>
-            </circle>
-            {% if g.irrigated %}
-                {{ droplet_svg(g.x, g.y, g.r) }}
-            {% endif %}
-        {% else %}
-            {# build polygon #}
-            <polygon points="{{ g.points }}" class="{{ g.class }}">
-                <title>{{ g.name }}</title>
-            </polygon>
-            {% if g.irrigated %}
-                {% set x, y = g.points.split(',')[:1] %}
-                {{ droplet_svg(x, y) }}
-            {% endif %}
-        {%  endif %}
+    {% for g_type, geodata_list in geodata_dict.items() %}
+        <g class="map-item {{ g_type }}">
+            {% for g in geodata_list %}
+                {% if g_type.endswith('_point') %}
+                    {# build circle#}
+                    {% if g_type == 'plant_point' %}
+                        <a href="{{ url_for('plant.get_plant', plant_id=g.plant_id) }}">
+                            <circle cx="{{ g.x }}" cy="{{ g.y }}" r="{{ g.r }}" class="{{ g.class }}">
+                                <title>{{ g.name }}</title>
+                            </circle>
+                            {% if g.irrigated %}
+                                {{ droplet_svg(g.x, g.y, g.r) }}
+                            {% endif %}
+                        </a>
+                    {% else %}
+                        <circle cx="{{ g.x }}" cy="{{ g.y }}" r="{{ g.r }}" class="{{ g.class }}">
+                            <title>{{ g.name }}</title>
+                        </circle>
+                    {% endif %}
+                {% else %}
+                    {# build polygon #}
+                    <polygon points="{{ g.points }}" class="{{ g.class }}">
+                        <title>{{ g.name }}</title>
+                    </polygon>
+                    {% if g.irrigated %}
+                        {% set x, y = g.points.split(',')[:1] %}
+                        {{ droplet_svg(x, y) }}
+                    {% endif %}
+                {%  endif %}
+            {% endfor %}
+        </g>
     {% endfor %}
 {% endmacro %}
 
-{% macro map_renderer(is_render_for_input, geodata_list, x_start, y_start, x_max, y_max) -%}
+{% macro map_renderer(is_render_for_input, geodata_dict, x_start, y_start, x_max, y_max) -%}
     {% set x_start = x_start if x_start else 0 %}
     {% set y_start = y_start if y_start else 0 %}
     {% set x_max = x_max if x_max else 12780 %}
@@ -148,23 +160,23 @@
             <circle id="point" class="focus"></circle>
         {% endif %}
         {# Build boundaries, etc. #}
-        {% call map_items_builder(geodata_list) %}
+        {% call map_items_builder(geodata_dict) %}
 
         {% endcall %}
 
     </svg>
 {% endmacro %}
 
-{% macro render_input_map(geodata_list, x_start, y_start, x_max, y_max) -%}
+{% macro render_input_map(geodata_dict, x_start, y_start, x_max, y_max) -%}
     {{ caller() }}
-    {% call map_renderer(is_render_for_input=True, geodata_list=geodata_list, x_start=x_start, y_start=y_start, x_max=x_max, y_max=y_max) %}
+    {% call map_renderer(is_render_for_input=True, geodata_dict=geodata_dict, x_start=x_start, y_start=y_start, x_max=x_max, y_max=y_max) %}
     {% endcall %}
 
 {% endmacro %}
 
-{% macro render_static_map(geodata_list, x_start, y_start, x_max, y_max) -%}
+{% macro render_static_map(geodata_dict, x_start, y_start, x_max, y_max) -%}
     {{ caller() }}
-    {% call map_renderer(is_render_for_input=False, geodata_list=geodata_list, x_start=x_start, y_start=y_start, x_max=x_max, y_max=y_max) %}
+    {% call map_renderer(is_render_for_input=False, geodata_dict=geodata_dict, x_start=x_start, y_start=y_start, x_max=x_max, y_max=y_max) %}
     {% endcall %}
 {% endmacro %}
 

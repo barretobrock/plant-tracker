@@ -20,7 +20,10 @@
         {{ 'Edit' if is_edit else 'Add' }} a plant
     {% endcall %}
 
-    {% call s.render_input_map(map_points) %}
+    <div class="scrollable-map">
+        {% call s.render_input_map(map_points) %}
 
-    {% endcall %}
+        {% endcall %}
+    </div>
+
 {% endblock %}

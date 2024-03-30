@@ -15,9 +15,11 @@
     {% call f.render_form(form, data_rows, post_endpoint_url) %}
         {{ 'Edit' if is_edit else 'Add' }} a {{ form['geodata_type'].data.value }}
     {% endcall %}
-    {% call s.render_input_map(map_points) %}
+    <div class="scrollable-map">
+        {% call s.render_input_map(map_points) %}
 
-    {% endcall %}
+        {% endcall %}
+    </div>
 
 
 {% endblock %}
