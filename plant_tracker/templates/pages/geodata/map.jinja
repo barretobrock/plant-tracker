@@ -4,6 +4,6 @@
     {{ super() }}
 {% endblock %}
 {% block content %}
-    {% call s.render_static_map(map_points) %}
+    {% call s.render_static_map(map_points_dict) %}
     {% endcall %}
 {% endblock %}
