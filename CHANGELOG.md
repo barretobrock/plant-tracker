@@ -15,6 +15,20 @@ _Note: 'Unreleased' section below is used for untagged changes that will be issu
 #### Security
 __BEGIN-CHANGELOG__
  
+### [0.0.7] - 2024-03-29
+#### Added
+ - map in input mode is now scrollable
+#### Changed
+#### Deprecated
+#### Removed
+#### Fixed
+ - dates on input forms now actually show the current day's date, not just the date when the server last booted ;)
+ - textarea inputs should automagically adjust now
+ - SVGs now built in groups and rendered in order
+ - datalist results overlap due to shared reference
+ - image upload details now update upon paste
+#### Security
+ 
 ### [0.0.6] - 2024-03-23
 #### Added
  - Map view of all items

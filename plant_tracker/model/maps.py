@@ -17,10 +17,10 @@ from .base import Base
 class GeodataType(StrEnum):
     REGION = 'region'
     SUB_REGION = 'sub_region'
-    PLANT_POINT = 'plant_point'
-    PLANT_GROUP = 'plant_group'
-    OTHER_POINT = 'other_point'
     OTHER_POLYGON = 'other_polygon'
+    OTHER_POINT = 'other_point'
+    PLANT_GROUP = 'plant_group'
+    PLANT_POINT = 'plant_point'
 
 
 @dataclass

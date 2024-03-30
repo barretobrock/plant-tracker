@@ -97,19 +97,17 @@ class GeodataPolygon:
         }
 
 
-def get_all_geodata(session, focus_ids: List[int] = None) -> List[Dict]:
+def get_all_geodata(session, focus_ids: List[int] = None) -> Dict[GeodataType, List[Dict]]:
     """Collects all geodata points/polygons, compiles them for processing in jinja"""
     if focus_ids is None:
         focus_ids = []
-    items = []
-    geodatas = session.query(TableGeodata).all()
-    irr_plant_geoids = [
-        x.geodata_id for x in
-        session.query(TableGeodata)
-        .join(TablePlantLocation, TablePlantLocation.geodata_key == TableGeodata.geodata_id)
-        .join(TablePlant, TablePlantLocation.plant_location_id == TablePlant.plant_location_key)
-        .filter(and_(not_(TablePlant.is_dead), TablePlant.is_drip_irrigated)).all()
-    ]
+    items = {k: [] for k in list(GeodataType)}
+    geodatas = session.query(TableGeodata).order_by(TableGeodata.geodata_type.asc()).all()
+    geoids_and_plant_ids = session.query(TableGeodata.geodata_id, TablePlant.plant_id, TablePlant.is_drip_irrigated)\
+        .join(TablePlantLocation, TablePlantLocation.geodata_key == TableGeodata.geodata_id)\
+        .join(TablePlant, TablePlantLocation.plant_location_id == TablePlant.plant_location_key)\
+        .filter(not_(TablePlant.is_dead)).all()
+    geoid_to_plant = {x[0]: {'plant_id': x[1], 'is_irrigated': x[2]} for x in geoids_and_plant_ids}
     for gd in geodatas:
         if gd.geodata_type in ([GeodataType.PLANT_POINT, GeodataType.OTHER_POINT]):
             data = GeodataPoint.from_string(gd.data, name=gd.name, geo_type=gd.geodata_type)
@@ -117,8 +115,10 @@ def get_all_geodata(session, focus_ids: List[int] = None) -> List[Dict]:
             data = GeodataPolygon.from_string(gd.data, name=gd.name, geo_type=gd.geodata_type)
         data_dict = data.to_json(is_focus=gd.geodata_id in focus_ids)
         if gd.geodata_type in [GeodataType.PLANT_GROUP, GeodataType.PLANT_POINT]:
-            data_dict['irrigated'] = gd.geodata_id in irr_plant_geoids
-        items.append(data_dict)
+            gd_dict = geoid_to_plant.get(gd.geodata_id)
+            data_dict['irrigated'] = gd_dict['is_irrigated']
+            data_dict['plant_id'] = gd_dict['plant_id']
+        items[gd.geodata_type].append(data_dict)
     return items
 
 
