@@ -15,6 +15,13 @@ _Note: 'Unreleased' section below is used for untagged changes that will be issu
 #### Security
 __BEGIN-CHANGELOG__
  
+### [0.0.8] - 2024-04-01
+#### Added
+ - tooltips for object names in map
+ - click on input map renders point/polygon at location
+ - map links to items for either plant or geodata
+ - BS tooltip initialization script to base
+ 
 ### [0.0.7] - 2024-03-29
 #### Added
  - map in input mode is now scrollable
