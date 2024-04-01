@@ -3,7 +3,7 @@
     <circle cx="{{ x + r }}" cy="{{ y - r }}" r="{{ r }}" class="irrigation"></circle>
 {% endmacro %}
 
-{% macro map_items_builder(geodata_dict) -%}
+{% macro map_items_builder(geodata_dict, is_render_for_input) -%}
     {{ caller() }}
     {% if geodata_dict is none %}
         {% set geodata_dict = {} %}
@@ -11,35 +11,35 @@
     {% for g_type, geodata_list in geodata_dict.items() %}
         <g class="map-item-group {{ g_type }}">
             {% for g in geodata_list %}
-                {# Set url for geodata item#}
-                {% if g_type.startswith('plant_') %}
-                    {# get plant url #}
-                    {% set url = url_for('plant.get_plant', plant_id=g.plant_id) %}
-                {% else %}
-                    {% set url = url_for('geodata.edit_geodata', geo_type=g_type, obj_id=g.gid) %}
+                {% if not is_render_for_input %}
+                    {# Set url for geodata item#}
+                    {% if g_type.startswith('plant_') %}
+                        {# get plant url #}
+                        {% set url = url_for('plant.get_plant', plant_id=g.plant_id) %}
+                    {% else %}
+                        {% set url = url_for('geodata.edit_geodata', geo_type=g_type, obj_id=g.gid) %}
+                    {% endif %}
+                    <a href="{{ url }}" data-bs-toggle="tooltip" title="{{ g.name }}">
                 {% endif %}
-
-
                 {% if g_type.endswith('_point') %}
                     {# build circle#}
-                    <a href="{{ url }}" data-bs-toggle="tooltip" title="{{ g.name }}">
-                        <circle cx="{{ g.x }}" cy="{{ g.y }}" r="{{ g.r }}" class="{{ g.class }}"></circle>
-                        {% if g.is_irrigated %}
-                            {{ droplet_svg(g.x, g.y, g.r) }}
-                        {% endif %}
-                    </a>
+                    <circle cx="{{ g.x }}" cy="{{ g.y }}" r="{{ g.r }}" class="{{ g.class }}"></circle>
+                    {% if g.is_irrigated %}
+                        {{ droplet_svg(g.x, g.y, g.r) }}
+                    {% endif %}
                 {% else %}
                     {# build polygon #}
-                    <a href="{{ url }}" data-bs-toggle="tooltip" title="{{ g.name }}">
-                        <polygon points="{{ g.points }}" class="{{ g.class }}">
-                            <title>{{ g.name }}</title>
-                        </polygon>
-                        {% if g.is_irrigated %}
-                            {% set x, y = g.points.split(',')[:1] %}
-                            {{ droplet_svg(x, y) }}
-                        {% endif %}
-                    </a>
+                    <polygon points="{{ g.points }}" class="{{ g.class }}">
+                        <title>{{ g.name }}</title>
+                    </polygon>
+                    {% if g.is_irrigated %}
+                        {% set x, y = g.points.split(',')[:1] %}
+                        {{ droplet_svg(x, y) }}
+                    {% endif %}
                 {%  endif %}
+                {% if is_render_for_input %}
+                    </a>
+                {% endif %}
             {% endfor %}
         </g>
     {% endfor %}
@@ -176,7 +176,7 @@
     {{ caller() }}
     <svg id="map" viewBox="{{ x_start }} {{ y_start }} {{ x_max }} {{ y_max }}">
         {# Build boundaries, etc. #}
-        {% call map_items_builder(geodata_dict) %}
+        {% call map_items_builder(geodata_dict, is_render_for_input) %}
 
         {% endcall %}
         {# Build focus items last so they're on top#}

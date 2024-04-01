@@ -21,13 +21,12 @@ __BEGIN-CHANGELOG__
  - click on input map renders point/polygon at location
  - map links to items for either plant or geodata
  - BS tooltip initialization script to base
+#### Fixed
+ - disable map object links on input mode
  
 ### [0.0.7] - 2024-03-29
 #### Added
  - map in input mode is now scrollable
-#### Changed
-#### Deprecated
-#### Removed
 #### Fixed
  - dates on input forms now actually show the current day's date, not just the date when the server last booted ;)
  - textarea inputs should automagically adjust now
@@ -44,7 +43,6 @@ __BEGIN-CHANGELOG__
 #### Changed
  - Plant & species image carousels are now unified
  - Refactor template files to `.jinja` extension for better syntax highlighting in development
-#### Deprecated
 #### Removed
  - Support for plant map objects in map list (this should only be accessed through plant object) 
 #### Fixed
