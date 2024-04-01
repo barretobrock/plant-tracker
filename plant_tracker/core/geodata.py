@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import (
     Dict,
     List,
+    Optional,
     Union
 )
 
@@ -24,6 +25,7 @@ from plant_tracker.model import (
 
 @dataclass
 class GeodataPoint:
+    gid: int
     name: str
     geo_type: GeodataType
     x: float
@@ -31,8 +33,9 @@ class GeodataPoint:
     r: float = 250
 
     @classmethod
-    def from_string(cls, gd_pt: str, name: str, geo_type: GeodataType):
+    def from_string(cls, gd_pt: str, name: str, geo_type: GeodataType, gid: int = None):
         cls.geo_type = geo_type
+        cls.gid = gid
         cls.name = name
         pts = [x.strip() for x in gd_pt.split(',')]
         if len(pts) == 3:
@@ -50,6 +53,7 @@ class GeodataPoint:
     @classmethod
     def to_json(cls, is_focus: bool = False) -> Dict:
         return {
+            'gid': cls.gid,
             'name': cls.name,
             'type': cls.geo_type.value,
             'x': cls.x,
@@ -61,14 +65,16 @@ class GeodataPoint:
 
 @dataclass
 class GeodataPolygon:
+    gid: Optional[int]
     name: str
     geo_type: GeodataType
     points: List[List[float]]
 
     @classmethod
-    def from_string(cls, gd_pts: str, name: str, geo_type: GeodataType):
+    def from_string(cls, gd_pts: str, name: str, geo_type: GeodataType, gid: int = None):
         cls.geo_type = geo_type
         cls.name = name
+        cls.gid = gid
         pts = []
         coords = gd_pts.split('\n')
         for coord in coords:
@@ -90,6 +96,7 @@ class GeodataPolygon:
     @classmethod
     def to_json(cls, is_focus: bool = False) -> Dict:
         return {
+            'gid': cls.gid,
             'name': cls.name,
             'type': cls.geo_type.value,
             'points': cls.to_string(),
@@ -110,13 +117,13 @@ def get_all_geodata(session, focus_ids: List[int] = None) -> Dict[GeodataType, L
     geoid_to_plant = {x[0]: {'plant_id': x[1], 'is_irrigated': x[2]} for x in geoids_and_plant_ids}
     for gd in geodatas:
         if gd.geodata_type in ([GeodataType.PLANT_POINT, GeodataType.OTHER_POINT]):
-            data = GeodataPoint.from_string(gd.data, name=gd.name, geo_type=gd.geodata_type)
+            data = GeodataPoint.from_string(gd.data, name=gd.name, geo_type=gd.geodata_type, gid=gd.geodata_id)
         else:
-            data = GeodataPolygon.from_string(gd.data, name=gd.name, geo_type=gd.geodata_type)
+            data = GeodataPolygon.from_string(gd.data, name=gd.name, geo_type=gd.geodata_type, gid=gd.geodata_id)
         data_dict = data.to_json(is_focus=gd.geodata_id in focus_ids)
         if gd.geodata_type in [GeodataType.PLANT_GROUP, GeodataType.PLANT_POINT]:
             gd_dict = geoid_to_plant.get(gd.geodata_id)
-            data_dict['irrigated'] = gd_dict['is_irrigated']
+            data_dict['is_irrigated'] = gd_dict['is_irrigated']
             data_dict['plant_id'] = gd_dict['plant_id']
         items[gd.geodata_type].append(data_dict)
     return items
@@ -143,15 +150,15 @@ GEODATA_TABLE_OBJ_TYPE = Union[TableGeodata, TablePlantLocation, TablePlantSubRe
 
 
 def process_gdata_and_assign_location(session, table_obj: GEODATA_TABLE_OBJ_TYPE, form_data: Dict,
-                                      geo_type: GeodataType, alt_name: str = None) -> GEODATA_TABLE_OBJ_TYPE:
+                                      geo_type: GeodataType, alt_name: str = None, gid: int = None) -> GEODATA_TABLE_OBJ_TYPE:
 
     form_geodata_key = 'geodata' if isinstance(table_obj, TablePlantLocation) else 'data'
     geodata_name = alt_name if alt_name is not None else form_data['name']
     try:
-        geodata = GeodataPoint.from_string(form_data[form_geodata_key], name=geodata_name, geo_type=geo_type)
+        geodata = GeodataPoint.from_string(form_data[form_geodata_key], name=geodata_name, geo_type=geo_type, gid=gid)
         is_polygon = False
     except Exception:
-        geodata = GeodataPolygon.from_string(form_data[form_geodata_key], name=geodata_name, geo_type=geo_type)
+        geodata = GeodataPolygon.from_string(form_data[form_geodata_key], name=geodata_name, geo_type=geo_type, gid=gid)
         is_polygon = True
 
     if geo_type in [GeodataType.OTHER_POINT, GeodataType.OTHER_POLYGON]:

@@ -9,33 +9,36 @@
         {% set geodata_dict = {} %}
     {% endif %}
     {% for g_type, geodata_list in geodata_dict.items() %}
-        <g class="map-item {{ g_type }}">
+        <g class="map-item-group {{ g_type }}">
             {% for g in geodata_list %}
+                {# Set url for geodata item#}
+                {% if g_type.startswith('plant_') %}
+                    {# get plant url #}
+                    {% set url = url_for('plant.get_plant', plant_id=g.plant_id) %}
+                {% else %}
+                    {% set url = url_for('geodata.edit_geodata', geo_type=g_type, obj_id=g.gid) %}
+                {% endif %}
+
+
                 {% if g_type.endswith('_point') %}
                     {# build circle#}
-                    {% if g_type == 'plant_point' %}
-                        <a href="{{ url_for('plant.get_plant', plant_id=g.plant_id) }}">
-                            <circle cx="{{ g.x }}" cy="{{ g.y }}" r="{{ g.r }}" class="{{ g.class }}">
-                                <title>{{ g.name }}</title>
-                            </circle>
-                            {% if g.irrigated %}
-                                {{ droplet_svg(g.x, g.y, g.r) }}
-                            {% endif %}
-                        </a>
-                    {% else %}
-                        <circle cx="{{ g.x }}" cy="{{ g.y }}" r="{{ g.r }}" class="{{ g.class }}">
-                            <title>{{ g.name }}</title>
-                        </circle>
-                    {% endif %}
+                    <a href="{{ url }}" data-bs-toggle="tooltip" title="{{ g.name }}">
+                        <circle cx="{{ g.x }}" cy="{{ g.y }}" r="{{ g.r }}" class="{{ g.class }}"></circle>
+                        {% if g.is_irrigated %}
+                            {{ droplet_svg(g.x, g.y, g.r) }}
+                        {% endif %}
+                    </a>
                 {% else %}
                     {# build polygon #}
-                    <polygon points="{{ g.points }}" class="{{ g.class }}">
-                        <title>{{ g.name }}</title>
-                    </polygon>
-                    {% if g.irrigated %}
-                        {% set x, y = g.points.split(',')[:1] %}
-                        {{ droplet_svg(x, y) }}
-                    {% endif %}
+                    <a href="{{ url }}" data-bs-toggle="tooltip" title="{{ g.name }}">
+                        <polygon points="{{ g.points }}" class="{{ g.class }}">
+                            <title>{{ g.name }}</title>
+                        </polygon>
+                        {% if g.is_irrigated %}
+                            {% set x, y = g.points.split(',')[:1] %}
+                            {{ droplet_svg(x, y) }}
+                        {% endif %}
+                    </a>
                 {%  endif %}
             {% endfor %}
         </g>
@@ -127,17 +130,35 @@
 
                 // This section handles showing mouse coordinates
                 let map = document.getElementById('map');
-                let mapParent = map.parentElement.parentElement;
                 let coorddiv = document.getElementById('coords');
                 // Update mouse coordinates when moving over the svg
                 map.onmousemove = function(event) {
                     let xRatio = 12780 / map.scrollWidth;
                     let yRatio = 35210 / map.scrollHeight;
-                    // Starting point on page for x axis
-                    let xBuff = (mapParent.clientWidth - map.clientWidth ) / 2;
-                    let yBuff = (document.body.scrollHeight - map.scrollHeight - 56);
-                    // console.log(event);
-                    coorddiv.value = Math.round((event.pageX - xBuff) * xRatio) + ', ' + Math.round((event.pageY - yBuff) * yRatio);
+                    // Get x,y coords of svg on screen
+                    {#console.log(event);#}
+                    coorddiv.value = Math.round(event.layerX * xRatio) + ', ' + Math.round(event.layerY * yRatio);
+                }
+                // When svg is clicked...
+                //  ... if point, replace value entirely
+                //  ... if polygon, add a new line of coordinates to the end
+                map.onclick = function (event) {
+                    let xRatio = 12780 / map.scrollWidth;
+                    let yRatio = 35210 / map.scrollHeight;
+                    let val = input_elem.value;
+                    if (is_polygon) {
+                        // Add new line to geodata input
+                        if (input_elem.value !== '') {
+                            // Not an empty field, add \n to beginning
+                            val += '\n';
+                        }
+                        val += Math.round(event.layerX * xRatio) + ',' + Math.round(event.layerY * yRatio);
+                    } else {
+                        val = Math.round(event.layerX * xRatio) + ',' + Math.round(event.layerY * yRatio) + ',' + 250;
+                    }
+                    input_elem.value = val
+                    // trigger new input event since this won't get picked up otherwise
+                    input_elem.dispatchEvent(new Event('input'));
                 }
             }
 
@@ -149,21 +170,21 @@
         {# Mouse coordinate popup #}
         <div id="coords-div">
             <span>Mouse coordinates<sup>(mm)</sup>: </span>
-            <input id="coords" type="text" readonly/>
+            <input id="coords" type="text" readonly />
         </div>
     {% endif %}
     {{ caller() }}
     <svg id="map" viewBox="{{ x_start }} {{ y_start }} {{ x_max }} {{ y_max }}">
+        {# Build boundaries, etc. #}
+        {% call map_items_builder(geodata_dict) %}
+
+        {% endcall %}
+        {# Build focus items last so they're on top#}
         {% if is_render_for_input %}
             {# These will be used to plot objects controlled through the input element #}
             <polygon id="polygon" points="" class="focus"></polygon>
             <circle id="point" class="focus"></circle>
         {% endif %}
-        {# Build boundaries, etc. #}
-        {% call map_items_builder(geodata_dict) %}
-
-        {% endcall %}
-
     </svg>
 {% endmacro %}
 

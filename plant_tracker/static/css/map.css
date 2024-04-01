@@ -1,3 +1,7 @@
+#map::-webkit-scrollbar {
+    width: .01em;
+}
+
 .scrollable-map {
     height: 700px;
     overflow-y: scroll;
@@ -68,9 +72,9 @@ circle.plant_point:hover {
     stroke: green;
 }
 
-
 #map {
-    border: 1px dotted cornflowerblue
+    border: 1px dotted cornflowerblue;
+    width: 1100px;
 }
 
 .irrigation {
