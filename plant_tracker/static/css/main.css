@@ -5,6 +5,7 @@
     --txt-blue: cornflowerblue;
     --txt-brown: #8c6406;
     --txt-yellow: #ffc107;
+    --txt-orange: #fd7e14;
     --txt-red: #dc3545;
     --txt-pink: #d63384;
     --txt-light: #acacac;
@@ -31,6 +32,10 @@ body {
 a {
     color: var(--txt-blue);
     text-decoration: none;
+}
+
+.font-monospace {
+    color: var(--txt-orange);
 }
 
 .nav-logo {

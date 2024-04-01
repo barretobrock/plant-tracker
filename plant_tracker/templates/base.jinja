@@ -21,6 +21,15 @@
     <script type="text/javascript">
         window.setTimeout("for (const elem of document.getElementsByClassName('alert')) {elem.style.display = 'none';}", 2000);
     </script>
+    <!-- Initialize all tooltips -->
+    <script>
+        window.addEventListener("load", function () {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+              return new bootstrap.Tooltip(tooltipTriggerEl)
+            });
+        })
+    </script>
     {% endblock %}
     <!-- FontAwesome -->
     <script src="https://use.fontawesome.com/9b3bd4052a.js"></script>
@@ -131,7 +140,10 @@
     </main>
     <footer class="footer mt-auto py-2 bg-dark">
       <div>
-          <span class="text-muted float-start">Plant Tracker v{{ config['VERSION'] }}</span>
+          <span class="text-muted float-start">
+              Plant Tracker
+              <span class="font-monospace">v{{ config['VERSION'] }}</span>
+          </span>
       </div>
     </footer>
   </body>

@@ -8,7 +8,7 @@ from flask import (
 )
 from sqlalchemy.sql import not_
 
-from plant_tracker.core.geodata import get_all_geodata, get_boundaries
+from plant_tracker.core.geodata import get_all_geodata
 from plant_tracker.forms.add_geodata import (
     AddGeodataForm,
     get_geodata_data_from_form,
