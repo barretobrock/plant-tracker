@@ -164,7 +164,7 @@ def get_species(species_id: int):
                 map_info['data_points'].append({
                     'type': plant.plant_location.geodata.geodata_type,
                     'data': plant.plant_location.geodata.data,
-                    'name': plant.plant_location.name,
+                    'name': plant.plant_location.plant_location_name,
                     'color': 'green'
                 })
 
