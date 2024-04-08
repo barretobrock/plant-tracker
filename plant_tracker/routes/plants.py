@@ -71,7 +71,8 @@ def add_plant(species_id: int = None):
             if request.form.get('geodata'):
                 # Ensure geodata is updated
                 log.debug('Ensuring plant geodata is synced with database object... ')
-                gtype = GeodataType(f'plant_{request.form["shape_type"]}')
+                gtype_val = 'group' if request.form['shape_type'] == 'polygon' else request.form['shape_type']
+                gtype = GeodataType(f'plant_{gtype_val}')
                 loc_name = f'{plant.species.common_name}#{plant.plant_id}'
 
                 if plant.plant_location is None:

@@ -33,8 +33,8 @@
                             <title>{{ g.name }}</title>
                         </polygon>
                         {% if g.is_irrigated %}
-                            {% set x, y = g.points.split(',')[:1] %}
-                            {{ droplet_svg(x, y) }}
+                            {% set x, y = g.points.split('\n')[0].split(',') %}
+                            {{ droplet_svg(x|int, y|int) }}
                         {% endif %}
                     {%  endif %}
                 </a>
