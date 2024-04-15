@@ -29,10 +29,17 @@ polygon.focus {
 circle.focus {
     fill-opacity: 0.3;
 }
-
-circle.plant_point {
-    transition: 0.3s;
+text.focus-name {
+    font-size: 150px;
+    stroke: pink
 }
+
+polygon.plant_group,
+circle.plant_point {
+    transition: 0.1s;
+}
+
+polygon.plant_group:hover,
 circle.plant_point:hover {
     filter: brightness(50);
     box-shadow: #858585;
@@ -46,7 +53,7 @@ circle.plant_point:hover {
     fill-opacity: 0.05;
 }
 .plant_point,
-.plant_polygon {
+.plant_group {
     stroke-width: 10px;
     fill-opacity: 0.5;
 }
@@ -67,7 +74,7 @@ circle.plant_point:hover {
     stroke: cornflowerblue;
 }
 .plant_point,
-.plant_polygon {
+.plant_group {
     fill: green;
     stroke: green;
 }

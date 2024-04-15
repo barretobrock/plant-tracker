@@ -9,7 +9,7 @@ from flask import (
 )
 
 from plant_tracker.core.utils import default_if_prop_none
-from plant_tracker.core.geodata import get_boundaries
+from plant_tracker.core.geodata import get_all_geodata
 from plant_tracker.forms.add_species import (
     AddSpeciesForm,
     get_species_data_from_form,
@@ -154,19 +154,11 @@ def get_species(species_id: int):
                 ] for x in species.scheduled_maintenance_logs]
         }
 
-        map_info = {
-            'data_points': [],
-            'boundaries': get_boundaries(session=session),
-            'focus_color': 'green'
-        }
+        focus_ids = []
         for plant in species.plants:
             if plant.plant_location:
-                map_info['data_points'].append({
-                    'type': plant.plant_location.geodata.geodata_type,
-                    'data': plant.plant_location.geodata.data,
-                    'name': plant.plant_location.plant_location_name,
-                    'color': 'green'
-                })
+                focus_ids.append(plant.plant_location.geodata_key)
+        map_points = get_all_geodata(session=session, focus_ids=focus_ids)
 
         return render_template(
             'pages/species/species-info.jinja',
@@ -174,7 +166,7 @@ def get_species(species_id: int):
             icon_class_map=icon_class_map,
             basic_info=basic_info,
             scheduled_maint_info=scheduled_maint_info,
-            map_data=map_info
+            map_points=map_points
         )
 
 

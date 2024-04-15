@@ -15,6 +15,13 @@ _Note: 'Unreleased' section below is used for untagged changes that will be issu
 #### Security
 __BEGIN-CHANGELOG__
  
+### [0.1.0] - 2024-04-14
+#### Added
+ - Species map view renders plant names in focus 
+ - Plant groups get irrigation flag support
+#### Fixed
+ - Plant groups are now rendered in map view properly
+ 
 ### [0.0.8] - 2024-04-01
 #### Added
  - tooltips for object names in map

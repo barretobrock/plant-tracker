@@ -1,6 +1,6 @@
 {% macro droplet_svg(x, y, r) %}
-    {% set r = r/4 if r else 50 %}
-    <circle cx="{{ x + r }}" cy="{{ y - r }}" r="{{ r }}" class="irrigation"></circle>
+    {% set dr = r/4 %}
+    <circle cx="{{ x }}" cy="{{ y }}" r="{{ dr }}" class="irrigation"></circle>
 {% endmacro %}
 
 {% macro map_items_builder(geodata_dict, is_render_for_input) -%}
@@ -23,18 +23,33 @@
                 <a data-bs-toggle="tooltip" title="{{ g.name }}" {% if url %} href="{{ url }}" {% endif %}>
                     {% if g_type.endswith('_point') %}
                         {# build circle#}
-                        <circle cx="{{ g.x }}" cy="{{ g.y }}" r="{{ g.r }}" class="{{ g.class }}"></circle>
                         {% if g.is_irrigated %}
                             {{ droplet_svg(g.x, g.y, g.r) }}
                         {% endif %}
+                        <circle cx="{{ g.x }}" cy="{{ g.y }}" r="{{ g.r }}" class="{{ g.class }}">
+
+                        </circle>
+                        {% if 'focus' in g.class %}
+                            <text x="{{ g.x - g.r }}" y="{{ g.y - g.r }}" class="focus-name">{{ g.name }}</text>
+                        {% endif %}
                     {% else %}
                         {# build polygon #}
-                        <polygon points="{{ g.points }}" class="{{ g.class }}">
-                            <title>{{ g.name }}</title>
-                        </polygon>
                         {% if g.is_irrigated %}
-                            {% set x, y = g.points.split('\n')[0].split(',') %}
-                            {{ droplet_svg(x|int, y|int) }}
+                            {% set first = g.points.split('\n')[0].split(',') %}
+                            {% set second = g.points.split('\n')[1].split(',') %}
+                            {% set last = g.points.split('\n')[-1].split(',') %}
+                            {# Calculate midpoint between the midpoints of first & second and first & last  #}
+                            {% set mid_first = [(first[0]|float + second[0]|float) / 2, (first[1]|float + second[1]|float) / 2] %}
+                            {% set mid_last = [(first[0]|float + last[0]|float) / 2, (first[1]|float + last[1]|float) / 2] %}
+                            {% set mid = [(mid_first[0]|float + mid_last[0]|float) / 2, (mid_first[1]|float + mid_last[1]|float) / 2] %}
+                            {{ droplet_svg(mid[0]|int, mid[1]|int, r=200) }}
+                        {% endif %}
+                        <polygon points="{{ g.points }}" class="{{ g.class }}">
+
+                        </polygon>
+                        {% if 'focus' in g.class %}
+                            {% set first = g.points.split('\n')[0].split(',') %}
+                            <text x="{{ first[0] }}" y="{{ first[1] }}" class="focus-name">{{ g.name }}</text>
                         {% endif %}
                     {%  endif %}
                 </a>
